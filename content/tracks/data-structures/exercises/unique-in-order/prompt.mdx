@@ -1,0 +1,44 @@
+---
+title: "Unique in Order"
+track: data-structures
+order: 14
+summary: "Remove consecutive duplicates while keeping the first occurrence of each run."
+xp: 25
+difficulty: medium
+functionName: "unique_in_order"
+sources:
+  - title: "Exercism Python Track — concept: lists"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The task
+
+Write `unique_in_order(values)` that removes **consecutive** duplicates, keeping
+the first item of every run.
+
+```python
+unique_in_order([1, 1, 2, 2, 3, 1])  # [1, 2, 3, 1]
+```
+
+Note the final `1`: it is kept because it does not follow another `1`. This is
+not full deduplication — that would be a set.
+
+## Rules
+
+- Preserve order.
+- An empty input returns an empty list.
+- Work for any hashable value, not just numbers.
+
+## The one-line version
+
+`itertools.groupby` groups consecutive equal items. The idiomatic solution
+returns the first value of each group, which is a good lesson in reading the
+standard library before writing loops yourself.

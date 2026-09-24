@@ -1,0 +1,101 @@
+---
+title: "Project: Command Line Tool"
+track: projects
+order: 2
+summary: "A complete small project: a package layout, an argparse interface, a test suite and an installed console script."
+xp: 10
+tags: [projects, cli]
+objectives:
+  - Lay out an installable package
+  - Wire a console script
+  - Finish with a suite and a README
+sources:
+  - title: "PyPA Packaging Tutorial"
+    author: "Python Packaging Authority"
+    url: "https://packaging.python.org/en/latest/tutorials/packaging-projects/"
+    license: "PSF-style permissive"
+    licenseUrl: "https://packaging.python.org/en/latest/"
+  - title: "The Python Tutorial — 7.2.1. Writing CSV Files"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/csv.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/csv.html"
+---
+
+## The brief
+
+A command line tool that reads a folder of CSV files and prints a summary per
+file: row count, date range, and the sum of the first numeric column. Two weeks,
+no interface, no database.
+
+## The structure
+
+```text
+csv-summary/
+  pyproject.toml
+  src/
+    csv_summary/
+      __init__.py
+      cli.py
+      summary.py
+  tests/
+    test_summary.py
+```
+
+```toml
+[project.scripts]
+csv-summary = "csv_summary.cli:main"
+```
+
+```bash
+python -m pip install -e ".[dev]"
+csv-summary data/ --column total
+```
+
+## One module per responsibility
+
+```python
+def summarise(path: Path, column: str | None = None) -> Summary:
+    """Read one CSV and return its summary."""
+    ...
+
+def render(summary: Summary) -> str:
+    """Format one summary for the terminal."""
+    ...
+```
+
+`summary.py` knows about CSV. `cli.py` knows about arguments and printing.
+Neither knows about the other, which is why both are easy to test.
+
+## Errors the user can act on
+
+```python
+try:
+    summary = summarise(path, column)
+except FileNotFoundError:
+    print(f"no such file: {path}", file=sys.stderr)
+    raise SystemExit(1)
+except KeyError as error:
+    print(f"column not found: {error}", file=sys.stderr)
+    raise SystemExit(1)
+```
+
+Name the file, name the column, exit non-zero. A tool that prints a traceback
+for a missing column is a tool nobody scripts.
+
+<Callout kind="note" title="Finish it">
+  Test suite, README with three examples, and the package installable from a
+  clean environment. A project that only runs in your laptop's directory is a
+  draft, whatever it does.
+</Callout>
+
+<Callout kind="try" title="Ship criterion">
+  Clone your repository into an empty folder, install it, and run the command on
+  a file you have never seen. Whatever breaks, fix before you call it done.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  A CLI project is a package with an entry point, one module per responsibility,
+  errors that name the problem, a test suite, and a README. Installing it in a
+  clean environment is the definition of finished.
+</Callout>

@@ -1,0 +1,85 @@
+---
+title: "Project: Data Pipeline"
+track: projects
+order: 3
+summary: "A repeatable pipeline: read from a source, transform in steps, write somewhere useful, and make it safe to re-run."
+xp: 10
+tags: [projects, data]
+objectives:
+  - Structure a pipeline as named steps
+  - Make re-running harmless
+  - Log counts at every stage
+sources:
+  - title: "SciPy Lecture Notes — 3.2. Python and file I/O"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/file_io.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "The Python Tutorial — 7.2.1. Writing CSV Files"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/csv.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The brief
+
+Every night, read a folder of CSV exports, clean them, join a reference table,
+and write one summary file plus a per-run report.
+
+## Steps, not a script
+
+```python
+def run(source: Path, target: Path, reference: Path) -> RunReport:
+    raw = read_raw(source)
+    clean = drop_bad_rows(raw)
+    joined = clean.merge(pd.read_csv(reference), on="region", how="left", validate="m:1")
+    summary = aggregate(joined)
+    write_output(target, summary)
+    return RunReport(rows_in=len(raw), rows_out=len(summary), dropped=len(raw) - len(clean))
+```
+
+Each function is named, takes one job and returns data. A pipeline you cannot
+describe in five function names is a script you cannot debug.
+
+## Re-runnable by default
+
+```python
+target.mkdir(parents=True, exist_ok=True)
+temporary = target / "summary.tmp"
+write_output(temporary, summary)
+temporary.replace(target / "summary.csv")
+```
+
+Write to a temporary file and move it into place. If the run fails halfway, the
+previous good output is still there, and no consumer ever sees a half-written
+file.
+
+<Callout kind="note" title="Idempotent or it will bite you">
+  A pipeline that appends, increments or sends an email is not safe to re-run.
+  Decide explicitly: recompute from the source, or make the operation
+  idempotent. Re-running a broken pipeline at 2am should be boring.
+</Callout>
+
+## Counts at every stage
+
+```python
+logger.info("read %d rows", len(raw))
+logger.warning("dropped %d rows without an order date", len(raw) - len(clean))
+logger.info("wrote %d regions to %s", len(summary), target)
+```
+
+Numbers in the log are how you find the run that quietly produced a fifth of
+the data. Without them, a bad run is discovered by someone downstream.
+
+<Callout kind="try" title="Break it on purpose">
+  Feed the pipeline a file with a missing column, an empty file, and a file with
+  a new region. Each should fail loudly or be reported, never silently produce
+  a shorter output.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Structure a pipeline as named single-purpose steps, make re-running harmless by
+  writing atomically, and log row counts at every stage. A pipeline you can
+  re-run at 2am is a pipeline you trust.
+</Callout>

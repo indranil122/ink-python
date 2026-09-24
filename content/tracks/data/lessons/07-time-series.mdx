@@ -1,0 +1,86 @@
+---
+title: "Time Series"
+track: data
+order: 7
+summary: "Dates are not just another column. Resampling, rolling windows and period comparisons are what a time-indexed DataFrame makes easy."
+xp: 10
+tags: [data, time]
+objectives:
+  - Set a datetime index and resample
+  - Compute rolling and expanding statistics
+  - Compare periods correctly
+sources:
+  - title: "Pandas User Guide — Time series"
+    author: "The pandas Development Team"
+    url: "https://pandas.pydata.org/docs/user_guide/timeseries.html"
+    license: "BSD-3-Clause"
+    licenseUrl: "https://pandas.pydata.org/"
+  - title: "SciPy Lecture Notes — 3.1. Introduction to pandas"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/pandas.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## A datetime index unlocks everything
+
+```python
+df = df.set_index("order_date").sort_index()
+print(df["total"].resample("ME").sum())
+```
+
+`resample` is the workhorse: `D`, `W`, `ME` (month end), `QE` (quarter end),
+`YE` (year end), `h`, `min`. Note the modern aliases; older code uses `M` and
+`Q`, which pandas has deprecated.
+
+<Callout kind="watch" title="Sort after setting the index">
+  `set_index` does not sort. A resample on an unsorted index produces quietly
+  wrong buckets, and nothing warns you. `sort_index()` immediately afterwards
+  makes it correct.
+</Callout>
+
+## Rolling windows
+
+```python
+daily = df["total"].resample("D").sum()
+
+daily["mean_7d"] = daily.rolling(7, min_periods=1).mean()
+daily["std_30d"] = daily.rolling(30).std()
+daily["max_so_far"] = daily.expanding().max()
+```
+
+Rolling windows are how you smooth noise and find anomalies. `min_periods=1`
+avoids a gap of NaN at the start, which matters when the first six days are
+genuinely interesting.
+
+## Comparing periods
+
+```python
+this_year = df["total"].resample("ME").sum()
+last_year = this_year.shift(12)
+
+growth = (this_year - last_year) / last_year * 100
+```
+
+`shift` on a resampled series moves the whole series back one period, which is
+how you build a year-on-year comparison. `pct_change` does the same for the
+previous period.
+
+```python
+summary = df.groupby(df.index.to_period("M"))["total"].agg(["sum", "mean"])
+```
+
+`to_period` is the other tool worth knowing: it buckets by month, quarter or year
+regardless of the exact date.
+
+<Callout kind="try" title="Find the anomaly">
+  Plot daily totals with a 7-day rolling mean. Pick a spike by eye, then find
+  it in the data and see whether the 7-day mean caught it before a human would
+  have. That is anomaly detection in four lines.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Set a datetime index, sort it, then `resample` to the granularity you need.
+  Use `rolling` for smooth windows, `expanding` for running totals, `shift` for
+  year-on-year comparison, and `to_period` for calendar buckets.
+</Callout>

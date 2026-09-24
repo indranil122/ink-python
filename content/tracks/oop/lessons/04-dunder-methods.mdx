@@ -1,0 +1,131 @@
+---
+title: "Dunder Methods"
+track: oop
+order: 4
+summary: "Double-underscore methods are the hooks Python calls for operators, printing, comparison and context. Learn the handful you will actually use."
+xp: 10
+tags: [oop, dunder]
+objectives:
+  - Implement __str__, __repr__, __eq__ and __len__
+  - Explain why __eq__ usually means __hash__
+  - Use __enter__ and __exit__ for a context manager
+sources:
+  - title: "The Python Tutorial — 9.3.5. Container Objects"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/classes.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: classes and dunder methods"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## Python calls your methods for you
+
+```python
+print(value)
+len(value)
+value + other
+value == other
+value in container
+```
+
+Each of those is syntax sugar for a method call. `value + other` runs
+`value.__add__(other)`, and `len(value)` runs `value.__len__()`. Implementing
+them makes your class work with the whole language instead of one function at a
+time.
+
+## The four worth writing first
+
+```python
+class Money:
+    def __init__(self, amount):
+        self.amount = amount
+
+    def __str__(self):
+        return f"{self.amount:.2f}"
+
+    def __repr__(self):
+        return f"Money({self.amount!r})"
+
+    def __eq__(self, other):
+        if not isinstance(other, Money):
+            return NotImplemented
+        return self.amount == other.amount
+
+    def __len__(self):
+        return len(str(self.amount))
+```
+
+- `__str__` is for people: `print`, f-strings without a format spec.
+- `__repr__` is for developers: it should look like code that would rebuild the
+  object, and it is what a debugger shows.
+- `__eq__` defines what equality means. Returning `NotImplemented` lets Python
+  try the other operand's comparison, which is the correct way to say "not my
+  problem".
+- `__len__` makes the object work with `len()`.
+
+<Callout kind="watch" title="Defining __eq__ removes hashing">
+  A class that defines `__eq__` without `__hash__` becomes unhashable, and
+  putting it in a set or using it as a dictionary key raises `TypeError`. That
+  is deliberate: if two objects are equal, they must hash the same, and a
+  mutable object usually cannot promise that. If yours is immutable, say so:
+
+  ```python
+  def __hash__(self):
+      return hash(self.amount)
+  ```
+</Callout>
+
+## Arithmetic and containers
+
+```python
+def __add__(self, other):        # +
+def __radd__(self, other):       # when other is on the left
+def __lt__(self, other):         # <
+def __contains__(self, item):    # in
+def __getitem__(self, index):    # obj[key]
+def __iter__(self):              # for x in obj
+```
+
+`__radd__` exists because `5 + money` cannot use `int.__add__` usefully, so
+Python tries the reflected version on the right operand. Defining `__add__` and
+`__radd__` together is what lets your class sit on either side of the operator.
+
+## Context managers
+
+```python
+class Timer:
+    def __enter__(self):
+        self.started = time.perf_counter()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.elapsed = time.perf_counter() - self.started
+        return False
+```
+
+```python
+with Timer() as timer:
+    do_work()
+print(timer.elapsed)
+```
+
+Returning `False` from `__exit__` lets exceptions propagate; returning `True`
+swallows them, which is why almost every correct implementation returns `False`
+or nothing at all.
+
+<Callout kind="try" title="Make it print nicely">
+  Write a `Fraction` class with `__str__`, `__repr__`, `__eq__`, `__add__` and
+  `__hash__`. Check that `Fraction(1, 2) + Fraction(1, 2) == Fraction(1, 1)`
+  and that a set containing two equal fractions has one element.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Dunder methods are the hooks behind operators, printing, comparison and
+  `with`. Write `__str__` for humans and `__repr__` for debugging. Return
+  `NotImplemented` from `__eq__` for foreign types, and define `__hash__` when
+  you define `__eq__` on an immutable class.
+</Callout>

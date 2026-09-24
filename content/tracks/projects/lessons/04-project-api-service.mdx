@@ -1,0 +1,95 @@
+---
+title: "Project: API Service"
+track: projects
+order: 4
+summary: "A small service with auth, a database, tests and a deployment: the capstone most people actually want on a CV."
+xp: 10
+tags: [projects, web]
+objectives:
+  - Build a service with auth, persistence and tests
+  - Seed, migrate and deploy it
+  - Document how to run it
+sources:
+  - title: "FastAPI Documentation"
+    author: "Sebastián Ramírez"
+    url: "https://fastapi.tiangolo.com/tutorial/"
+    license: "MIT"
+    licenseUrl: "https://github.com/fastapi/fastapi/blob/main/LICENSE"
+  - title: "PyPA Packaging Tutorial"
+    author: "Python Packaging Authority"
+    url: "https://packaging.python.org/en/latest/"
+    license: "PSF-style permissive"
+    licenseUrl: "https://packaging.python.org/en/latest/"
+---
+
+## The brief
+
+A bookmark or expense or reading tracker API. Register, log in, create records,
+list your own, update, delete. Five endpoints, one table, one external
+dependency: none.
+
+## The shape
+
+```text
+app/
+  main.py
+  settings.py
+  deps.py          # session, current user
+  routers/
+    auth.py
+    records.py
+  models.py        # SQLAlchemy tables
+  schemas.py       # Pydantic request and response models
+tests/
+  conftest.py      # client, database, tokens
+```
+
+Everything the frontend would need, nothing it would not. A list endpoint that
+returns 200 items unpaginated is a service that will fall over.
+
+## Paging and filtering
+
+```python
+@app.get("/records", response_model=list[RecordOut])
+def list_records(
+    db: DbSession,
+    user=Depends(current_user),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+):
+    return db.scalars(
+        select(Record)
+        .where(Record.user_id == user.id)
+        .order_by(Record.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    ).all()
+```
+
+Bounded limit, a deterministic order, and the user filter inside the query. All
+three are the kind of thing that is easy to add later and impossible to add
+safely once clients depend on the old behaviour.
+
+## The finishing sequence
+
+1. Tests pass against a real database.
+2. `alembic upgrade head` works on an empty database.
+3. A seed command creates a demo user.
+4. The service deploys and `/health` responds.
+5. The README says how to run all of the above.
+
+<Callout kind="note" title="What a reviewer looks for">
+  Tests that cover the authorization cases, a migration history, a real
+  README, and no secrets in the repository. A small complete service beats a
+  large impressive one every time.
+</Callout>
+
+<Callout kind="try" title="Deploy and break it">
+  Deploy it, then run the test suite against the deployed URL with a wrong token.
+  Confirm it fails, and that no request returns another user's data.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Five endpoints, one table, a real database, tests that include authorization,
+  migrations, a seed command and a README. Small and finished is the goal.
+</Callout>

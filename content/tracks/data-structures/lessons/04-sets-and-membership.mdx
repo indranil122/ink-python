@@ -1,0 +1,128 @@
+---
+title: "Sets and Membership"
+track: data-structures
+order: 4
+summary: "Sets store unique, unordered values and answer 'is this present?' in constant time. Includes the set operations that replace most hand-written deduplication."
+xp: 10
+tags: [data-structures, sets]
+objectives:
+  - Use a set to remove duplicates and test membership quickly
+  - Apply union, intersection, difference and symmetric difference
+  - Choose a set over a list for the right reasons
+sources:
+  - title: "The Python Tutorial — 5.1. More on Sets"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 5"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "Exercism Python Track — concept: collections"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## A set keeps unique values
+
+```python
+tags = {"python", "web", "python"}
+print(len(tags))   # 2
+```
+
+Duplicates collapse, which is usually the reason you reach for a set in the
+first place. It is not ordered and cannot be indexed, so use it when membership
+matters and order does not.
+
+```python
+unique = list(set(["b", "a", "b", "c"]))
+```
+
+If you need the original order back, sort the result or use
+`dict.fromkeys`, which preserves first appearance:
+
+```python
+print(list(dict.fromkeys(["b", "a", "b", "c"])))
+```
+
+## Membership is the real reason
+
+```python
+seen = set()
+duplicates = []
+
+for value in ["a", "b", "a", "c", "b"]:
+    if value in seen:
+        duplicates.append(value)
+    seen.add(value)
+```
+
+Testing membership in a list is linear, so the loop above gets slower as the
+data grows. In a set it is effectively instant, which is the difference between
+fine and unusable on a large file.
+
+## Set operations
+
+| Operation | Method | Meaning |
+| --- | --- | --- |
+| Union | `a \| b` or `a.union(b)` | Everything in either |
+| Intersection | `a & b` or `a.intersection(b)` | Everything in both |
+| Difference | `a - b` or `a.difference(b)` | In `a` but not `b` |
+| Symmetric difference | `a ^ b` | In either, but not both |
+| Subset | `a <= b` | Every member of `a` is in `b` |
+| Disjoint | `a.isdisjoint(b)` | No members in common |
+
+```python
+python = {"ada", "alan", "grace"}
+rust = {"alan", "linus", "grace"}
+
+print(python & rust)
+print(python - rust)
+print(len(python | rust))
+```
+
+These operators are supported by the operator symbols you already use for
+arithmetic, which is why experienced Python code reads as set theory.
+
+<Callout kind="try" title="Remove duplicates, three ways">
+  ```python
+  values = [3, 1, 3, 2, 1]
+
+  print(list(set(values)))
+  print(list(dict.fromkeys(values)))
+  print([v for i, v in enumerate(values) if v not in values[:i]])
+  ```
+
+  The third preserves order without a set in the comprehension, at a cost in
+  speed. Know all three, and know when the trade is worth it.
+</Callout>
+
+## Frozen sets
+
+```python
+colors = frozenset({"red", "green"})
+```
+
+A `frozenset` is immutable and therefore hashable, which makes it usable as a
+dictionary key or inside another set when you need immutability.
+
+## When not to use a set
+
+- When order matters and you cannot re-sort afterwards.
+- When you need duplicates preserved.
+- When you need to index by position.
+
+Those are the three reasons a list is the right answer, and there are not many
+others. When in doubt, ask whether you are going to ask "is this present?" more
+than once.
+
+<Callout kind="recap" title="Recap">
+  Sets keep unique values with no order and constant-time membership. Use them
+  for deduplication, seen-tracking and set algebra. The operators `|`, `&`, `-`
+  and `^` replace most hand-written loops. Use `dict.fromkeys` when you need
+  deduplication that keeps the original order.
+</Callout>

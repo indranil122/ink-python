@@ -1,0 +1,159 @@
+---
+title: "Mutability, Aliasing and Copying"
+track: data-structures
+order: 5
+summary: "The lesson that prevents a whole category of bugs: what happens when two names point at the same object, and how to copy one level or all of them."
+xp: 10
+tags: [data-structures, mutability]
+objectives:
+  - Explain aliasing and why it is not a copy
+  - Choose between shallow and deep copying deliberately
+  - Predict the effect of every mutating method on aliases
+sources:
+  - title: "The Python Tutorial — 5.1. More on Lists"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 10"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "Google's Python Class — Strings, Lists, and Dictionaries"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/strings_lists_dictionaries.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+---
+
+## Two names, one object
+
+```python
+a = [1, 2, 3]
+b = a
+b.append(4)
+print(a)   # [1, 2, 3, 4]
+```
+
+`b = a` does not copy anything. It binds a second name to the same list object.
+This is called an **alias**, and it is the source of the bug where a function
+appears to modify a value it was only given.
+
+## Assignment rebinds, mutation changes
+
+These are the two operations, and keeping them apart is the whole lesson.
+
+```python
+a = [1, 2]
+b = a
+b = b + [3]
+print(a)   # [1, 2]
+```
+
+`b + [3]` builds a *new* list and rebinds `b` to it. `a` still points at the
+original, so nothing changed. The list is only shared when an operation changes
+the existing object in place.
+
+<Callout kind="try" title="Predict, then run">
+  ```python
+  a = [1, 2]
+  b = a[:]
+  b.append(3)
+  print(a, b)
+
+  a = [1, 2]
+  b = a
+  b.append(3)
+  print(a, b)
+  ```
+
+  One slice changed nothing visible. The other changed both. The difference is a
+  single pair of brackets, and it is the difference between passing a copy and
+  sharing a reference.
+</Callout>
+
+## Mutating methods versus non-mutating ones
+
+| Mutates in place | Returns a new value |
+| --- | --- |
+| `list.append` | `list + other` |
+| `list.extend` | `sorted(list)` |
+| `list.sort` | `list[:]` |
+| `list.reverse` | `list.copy` |
+| `dict.update` | `{**a, **b}` |
+| `set.add` | `set | other` |
+
+Anything in the left column changes every alias. Anything in the right column
+leaves the original alone, which is usually what a function should do to its
+argument.
+
+## Shallow copy
+
+```python
+original = [[1, 2], [3, 4]]
+shallow = original[:]
+shallow[0].append(99)
+
+print(original)
+```
+
+The outer list is a new object, so `shallow.append(...)` would not affect
+`original`. But the inner lists are shared, so `shallow[0].append(99)` does, and
+the printout shows `[1, 2, 99]`. A shallow copy copies one level and no more.
+
+## Deep copy
+
+```python
+import copy
+
+original = [[1, 2], [3, 4]]
+deep = copy.deepcopy(original)
+deep[0].append(99)
+
+print(original)   # [[1, 2], [3, 4]]
+```
+
+`deepcopy` recursively copies everything reachable. Use it when you genuinely
+need independence, and be aware that it is slower and will copy anything it
+finds, including objects that should not be duplicated.
+
+## Function parameters
+
+```python
+def add_item(basket, item):
+    basket.append(item)
+    return basket
+
+def total(basket):
+    return sum(basket)
+
+mine = ["apple"]
+add_item(mine, "bread")
+print(total(mine))
+```
+
+The caller sees the change because the function received a reference, not a
+copy. Two reasonable designs:
+
+```python
+def add_item(basket, item):
+    return [*basket, item]      # caller must use the return value
+```
+
+```python
+def add_item(basket, item):
+    basket = [*basket, item]    # local rebind, caller sees nothing
+    return basket
+```
+
+Decide deliberately, and document which one a function does. Most of the
+"surprising" Python behaviour in libraries is this decision made silently.
+
+<Callout kind="recap" title="Recap">
+  Assignment creates aliases, not copies. Mutating methods change every alias;
+  operations that return new objects do not. A slice is a shallow copy, and
+  shared inner objects still leak through it. Use `copy.deepcopy` for full
+  independence, and choose whether your functions mutate their arguments or
+  return new values on purpose.
+</Callout>

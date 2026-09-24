@@ -1,0 +1,44 @@
+---
+title: "Safe Deep Get"
+track: data-structures
+order: 3
+summary: "Read a value from nested dictionaries without raising when a level is missing."
+xp: 25
+difficulty: hard
+functionName: "deep_get"
+sources:
+  - title: "Exercism Python Track — concept: dictionaries"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Google's Python Class — Strings, Lists, and Dictionaries"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/strings_lists_dictionaries.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+---
+
+## The task
+
+Write `deep_get(data, path, default=None)` that walks a nested dictionary along
+a path of keys and returns the value, or `default` if any level is missing.
+
+```python
+config = {"server": {"host": "localhost", "port": 8080}}
+deep_get(config, ["server", "port"])        # 8080
+deep_get(config, ["server", "user", "id"])  # None
+```
+
+## Rules
+
+- An empty path returns `default`.
+- A missing key at any depth returns `default`, not an error.
+- A non-dictionary value in the middle of the path returns `default`.
+
+## Two implementations
+
+Write it with a loop, checking `isinstance(current, dict)` at each step. Then
+write it with a loop and `current.get(key)`, which returns `None` for a
+non-dictionary and therefore handles the third rule for free. The second is
+shorter and the type check is what you lose.

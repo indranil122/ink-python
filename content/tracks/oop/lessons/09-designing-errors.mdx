@@ -1,0 +1,137 @@
+---
+title: "Designing Errors"
+track: oop
+order: 9
+summary: "When to raise, what to name your exceptions, and how to design a custom exception hierarchy that callers can actually catch."
+xp: 10
+tags: [oop, errors]
+objectives:
+  - Decide where an exception belongs
+  - Name and structure a custom exception hierarchy
+  - Attach useful context to a failure
+sources:
+  - title: "The Python Tutorial — 8.1. Raising Exceptions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/errors.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 20"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "Exercism Python Track — concept: exceptions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## Exceptions are for the impossible, not the unusual
+
+Raise when the caller asked for something contradictory, and let ordinary
+results be ordinary values.
+
+```python
+def withdraw(amount):
+    if amount <= 0:
+        raise ValueError("amount must be positive")
+```
+
+Returning a sentinel instead would force every caller to check a truthy value
+they will eventually forget. Raise for a broken contract; return a value for a
+legitimate answer.
+
+## Built-ins cover most of it
+
+| Exception | Raised when |
+| --- | --- |
+| `ValueError` | Right type, impossible value |
+| `TypeError` | Wrong type entirely |
+| `KeyError` | Missing dictionary key |
+| `IndexError` | Position outside a sequence |
+| `AttributeError` | Missing attribute |
+| `NotImplementedError` | Abstract method not overridden |
+| `ZeroDivisionError` | Division by zero |
+
+Reaching for a custom exception before these is usually a sign the problem
+needs rethinking.
+
+## Add a custom one when callers must react
+
+```python
+class InsufficientFunds(Exception):
+    def __init__(self, requested, available):
+        self.requested = requested
+        self.available = available
+        super().__init__(
+            f"requested {requested}, only {available} available"
+        )
+```
+
+```python
+try:
+    account.withdraw(500)
+except InsufficientFunds as error:
+    print(error.available)
+```
+
+Now the caller can catch precisely this problem and recover, and the message
+carries the numbers needed to explain it.
+
+<Callout kind="note" title="Name it for the situation, not the cause">
+  `InsufficientFunds` and `ConfigurationError` describe what the caller did
+  wrong. `DatabaseException` describes where the code lives, which tells the
+  caller nothing about what to do.
+</Callout>
+
+## A hierarchy when there are several
+
+```python
+class AppError(Exception):
+    """Base class for every error this package raises."""
+
+
+class StorageError(AppError):
+    """Something went wrong while reading or writing data."""
+
+
+class MissingRecord(StorageError):
+    """The requested record does not exist."""
+
+
+class ConnectionLost(StorageError):
+    """The database could not be reached."""
+```
+
+Catching `StorageError` handles either storage problem; catching `AppError`
+handles all of them. Callers choose the breadth they want, and the hierarchy
+documents the design.
+
+## Add context, do not swallow
+
+```python
+try:
+    data = json.loads(raw)
+except json.JSONDecodeError as error:
+    raise ConfigError(f"{path}: {error}") from error
+```
+
+`from error` keeps the original in the traceback, so the cause and the context
+are both visible. Catching an exception and doing nothing with it loses
+information permanently, and a bare `except:` also catches `KeyboardInterrupt`,
+which you never want.
+
+<Callout kind="try" title="Design a failure surface">
+  Write a `ConfigError` hierarchy for a settings loader: missing file, malformed
+  line, missing required key. Then write a loader that raises all three with the
+  file name and line number in the message, and a caller that catches the base
+  class and reports one clean line to the user.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Raise when the caller's request is contradictory; return ordinary results
+  normally. Use the built-in exception that matches the failure, and define your
+  own when callers must react differently. Name it for the situation, build a
+  hierarchy so callers can choose breadth, and chain with `raise ... from`.
+</Callout>

@@ -1,0 +1,156 @@
+---
+title: "Repeating Work"
+track: foundations
+order: 9
+summary: "for and while, the two loop forms, and the three ways a loop goes wrong: running forever, running zero times, and running one time too many. Ends with range and enumerate."
+xp: 10
+tags: [basics, loops]
+objectives:
+  - Choose between for and while
+  - Use range, enumerate and zip instead of manual counters
+  - Recognise an off-by-one error before it ships
+sources:
+  - title: "The Python Tutorial — 4. More Control Flow Tools"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Python for Everybody — Chapter 5"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+  - title: "Exercism Python Track — concept: loops"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## for walks a sequence
+
+```python
+languages = ["Python", "Rust", "Go"]
+
+for language in languages:
+    print(language)
+```
+
+Three lines of structure: the keyword, a target name, and a sequence to walk.
+You do not declare the loop variable, and you do not index it. It arrives
+already holding each item in turn.
+
+## range gives you numbers to walk
+
+```python
+for number in range(5):
+    print(number)
+```
+
+That prints `0` through `4`. `range(2, 8)` starts at `2` and stops before `8`.
+`range(0, 10, 2)` steps by two. `range` does not build a list; it produces
+values on demand, which is why `range(1_000_000_000)` is instant.
+
+<Callout kind="watch" title="Off by one, always">
+  `range(5)` is five values numbered zero to four. If your output has one entry
+  too few, you probably started at `1`; one too many, you probably used
+  `<=`. Count the boundary before you count the body.
+</Callout>
+
+## enumerate and zip remove counting entirely
+
+Manual counters are the main reason loops get bugs.
+
+```python
+names = ["Ada", "Grace", "Alan"]
+scores = [100, 98, 91]
+
+for position, name in enumerate(names, start=1):
+    print(position, name)
+
+for name, score in zip(names, scores):
+    print(f"{name}: {score}")
+```
+
+`enumerate` gives you the index *and* the value. `zip` walks two sequences
+together, stopping at the shorter one. Neither requires you to maintain a
+counter by hand.
+
+## while runs until something changes
+
+Use `while` when the number of repetitions is not known in advance.
+
+```python
+countdown = 3
+
+while countdown > 0:
+    print(countdown)
+    countdown -= 1
+
+print("Liftoff")
+```
+
+`while` needs three things to be correct: a starting state, a test, and an
+update that moves the state toward the test becoming false. Forget the update
+and the loop runs forever.
+
+<Callout kind="try" title="Break it deliberately">
+  ```python
+  count = 1
+
+  while count < 5:
+      print(count)
+  ```
+
+  Run it. The output is `1` forever until you stop it. In this course that loop
+  is killed automatically after five seconds; on your own machine you press
+  Ctrl+C, and Python prints a `KeyboardInterrupt` traceback. The traceback ends
+  at the line that was executing, which is how you locate the missing update.
+</Callout>
+
+## break, continue, and else
+
+```python
+numbers = [4, 9, 16, 25, 36]
+
+for number in numbers:
+    if number > 30:
+        print("found a big one")
+        break
+    print(number)
+```
+
+`break` leaves the loop immediately. `continue` skips to the next iteration.
+And Python has an unusual `else` clause that runs only if the loop finished
+**without** hitting a `break` — useful for search loops, and rare enough that
+you will meet it in old code before you meet it in new code.
+
+```python
+for number in numbers:
+    if number == 999:
+        break
+else:
+    print("not found")
+```
+
+## Slicing and zipping with care
+
+```python
+items = list(range(10))
+
+print(items[2:5])
+print(items[::2])
+print(items[::-1])
+```
+
+`items[::-1]` reverses a sequence by stepping backwards from the end. It reads
+as a trick the first time and as clarity the tenth time, which is the trade
+worth making for a common, short idiom.
+
+<Callout kind="recap" title="Recap">
+  `for` walks a sequence; `while` repeats until a condition changes, and needs
+  an update or it never stops. Prefer `range`, `enumerate` and `zip` over
+  hand-rolled counters. `break` exits, `continue` skips, and the `else` clause
+  on a loop runs only when no `break` happened. Check loop boundaries first
+  when counts are wrong.
+</Callout>

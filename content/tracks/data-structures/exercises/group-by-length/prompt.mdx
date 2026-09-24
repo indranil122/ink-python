@@ -1,0 +1,46 @@
+---
+title: "Group By Length"
+track: data-structures
+order: 6
+summary: "Group words into a dictionary keyed by their length."
+xp: 25
+difficulty: easy
+functionName: "group_by_length"
+sources:
+  - title: "Exercism Python Track — concept: lists and dictionaries"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The task
+
+Write `group_by_length(words)` returning a dictionary from length to the list of
+words of that length.
+
+```python
+group_by_length(["a", "bb", "cc"])  # {1: ["a"], 2: ["bb", "cc"]}
+```
+
+## Rules
+
+- Words keep their input order inside each group.
+- An empty list returns an empty dictionary.
+- Duplicated words are kept.
+
+## The tool
+
+`setdefault` turns "find or create" into one line:
+
+```python
+groups.setdefault(len(word), []).append(word)
+```
+
+This is the standard grouping pattern. Learn it here and you will write it in
+Track 9 for every `groupby` you ever need.

@@ -1,0 +1,49 @@
+---
+title: "Repeat a String"
+track: functions
+order: 15
+summary: "Return a string repeated a number of times, handling zero and negative counts."
+xp: 25
+difficulty: easy
+functionName: "repeat_string"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "The Python Tutorial — 4. More Control Flow Tools"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The task
+
+Write `repeat_string(text, count)` returning `text` repeated `count` times.
+
+```python
+repeat_string("ab", 3)   # "ababab"
+```
+
+## Rules
+
+- `count` of `0` returns an empty string.
+- A negative count also returns an empty string, because a string cannot have
+  negative length.
+- The text is returned unchanged, including spaces and punctuation.
+
+## The obvious answer
+
+```python
+return text * count
+```
+
+Write it, then work out what Python actually does with `*` and a negative count.
+The behaviour is not what most people expect, and noticing that is the lesson.
+
+<Callout kind="try" title="Check the edge first">
+  Before writing the body, write down what `"ab" * -1` gives. Run it. Then write
+  a guard clause if the answer is not an empty string.
+</Callout>

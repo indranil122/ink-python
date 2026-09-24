@@ -1,0 +1,95 @@
+---
+title: "Plotting with Matplotlib"
+track: data
+order: 6
+summary: "Two figures that cover most analysis needs, how to label them honestly, and why a chart with no units is not finished."
+xp: 10
+tags: [data, plotting]
+objectives:
+  - Draw a line and a bar chart
+  - Label axes with units
+  - Choose the right chart type for the question
+sources:
+  - title: "SciPy Lecture Notes — 2. Matplotlib"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/matplotlib.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "Matplotlib User Guide"
+    author: "The Matplotlib Development Team"
+    url: "https://matplotlib.org/stable/users/explain/quick_start.html"
+    license: "PSF-style permissive"
+    licenseUrl: "https://matplotlib.org/stable/license.html"
+---
+
+## The object-oriented way
+
+```python
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots()
+ax.plot(months, revenue, marker="o")
+ax.set_title("Monthly revenue")
+ax.set_xlabel("Month")
+ax.set_ylabel("Revenue (GBP)")
+fig.savefig("revenue.png", dpi=150, bbox_inches="tight")
+```
+
+`fig` is the canvas, `ax` is the plotting area. Naming both is slightly more
+typing than `plt.plot`, and it is what lets you add a second panel, a shared
+legend, or anything else later without rewriting.
+
+## Two charts cover most of it
+
+```python
+fig, ax = plt.subplots()
+ax.bar(regions, totals)
+ax.set_ylabel("Revenue (GBP)")
+ax.tick_params(axis="x", rotation=45)
+```
+
+Bar for comparing categories, line for change over time. That rule gets you
+most of the way; scatter when both axes are continuous.
+
+## Label everything
+
+An axis without units is a picture, not an analysis. Title, both axis labels
+with units, and a legend when there is more than one series:
+
+```python
+ax.plot(months, revenue, label="Revenue")
+ax.plot(months, costs, label="Costs")
+ax.legend()
+```
+
+<Callout kind="note" title="Do not distort the scale">
+  Starting a bar chart's y-axis above zero exaggerates differences, because bar
+  length is the encoding. A line chart may start wherever the data does; a bar
+  chart should start at zero. This one rule fixes more misleading charts than
+  any other.
+</Callout>
+
+## Subplots for comparisons
+
+```python
+fig, axes = plt.subplots(1, 2, figsize=(12, 4), sharey=True)
+axes[0].plot(months, revenue)
+axes[0].set_title("Revenue")
+axes[1].plot(months, costs)
+axes[1].set_title("Costs")
+```
+
+Sharing the y-axis makes the two comparable, which is usually the entire point
+of putting them side by side.
+
+<Callout kind="try" title="Three charts, one question">
+  For one data set, draw a line, a bar and a histogram. Notice which question
+  each answers well, and which two answer the question badly. Choosing the
+  chart is most of data visualisation.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Use `fig, ax = plt.subplots()` and label both axes with units. Bars for
+  categories, lines over time, histograms for distributions, and start a bar
+  chart at zero. `sharey` makes side-by-side panels actually comparable.
+</Callout>

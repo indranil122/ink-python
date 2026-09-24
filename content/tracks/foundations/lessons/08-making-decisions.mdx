@@ -1,0 +1,160 @@
+---
+title: "Making Decisions"
+track: foundations
+order: 8
+summary: "if, elif, else, and the indentation rules that go with them. Includes the nested-conditional problem and the guard-clause style that keeps code flat."
+xp: 10
+tags: [basics, conditionals]
+objectives:
+  - Write an if / elif / else chain and predict its output
+  - Explain what indentation controls in Python
+  - Flatten nested conditionals with early returns or guard clauses
+sources:
+  - title: "The Python Tutorial — 4.1. More Flow Control Tools"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Google's Python Class — Conditionals"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/conditionals.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "Exercism Python Track — concept: conditionals"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## if, and the colon that changes everything
+
+A conditional in Python is four pieces: the keyword, a condition, a colon, and
+an indented block.
+
+```python
+temperature = 31
+
+if temperature > 30:
+    print("It is hot")
+```
+
+The colon announces that an indented block follows. Indentation is not
+decoration in Python; it **is** the syntax that defines the block. Four spaces
+is the convention, and mixing tabs with spaces produces errors that look
+arbitrary until you learn to read the caret position in the traceback.
+
+## elif and else
+
+```python
+grade = 74
+
+if grade >= 90:
+    print("A")
+elif grade >= 80:
+    print("B")
+elif grade >= 70:
+    print("C")
+else:
+    print("F")
+```
+
+Python checks the branches **top to bottom** and stops at the first match. That
+ordering is the whole design skill here: put the strictest condition first. If
+you put `if grade >= 70` above the others, every passing student gets a C.
+
+<Callout kind="note" title="Why order is everything">
+  A chain of `if` statements is a decision table read in order. Write the
+  branches so that each one is the *next* strictest case, and add a comment if
+  the ordering is not obvious to a reader.
+</Callout>
+
+## Indentation rules that will bite you
+
+```python
+if True:
+    print("four spaces")
+        print("eight spaces")
+```
+
+That raises `IndentationError: unexpected indent`. Python has no invisible
+block delimiters: the block is exactly the lines indented deeper than the
+statement that introduced it. Once the indentation returns to the original
+level, the block is over.
+
+## Nesting, and why to avoid it
+
+```python
+def describe(user):
+    if user["active"]:
+        if user["age"] >= 18:
+            if user["verified"]:
+                return "active adult, verified"
+    return "not eligible"
+```
+
+Four levels of indentation for one sentence of logic. Each extra level is a
+place a reader can lose the thread, and a place you can forget a case. The
+same logic, flattened with guard clauses — return early when the answer is
+already known:
+
+```python
+def describe(user):
+    if not user["active"]:
+        return "not eligible"
+    if user["age"] < 18:
+        return "not eligible"
+    if not user["verified"]:
+        return "active adult, unverified"
+    return "active adult, verified"
+```
+
+<Callout kind="watch" title="A real bug in both versions">
+  The first version returns `"not eligible"` for an *inactive but verified
+  adult*, which is arguably wrong — it conflates three different states. Flat
+  code makes that visible; nested code hides it. When a function has more than
+  one level of nesting, rewrite it.
+</Callout>
+
+## One-line forms, used sparingly
+
+```python
+status = "active" if user_active else "inactive"
+```
+
+This is a **conditional expression**. It is fine for a simple choice, and
+unreadable the moment the two branches grow beyond a word each.
+
+## Common mistakes
+
+- Writing `if x = 5:` instead of `if x == 5:`. This is a syntax error, which
+  is Python doing you a favour.
+- Comparing a string to `True` or a number to a string, which raises
+  `TypeError` in Python 3.
+- Forgetting that only the first matching branch runs. Code after a `return`
+  in the same block is unreachable.
+- Using `== True`. Write `if flag:` or `if not flag:`.
+
+<Callout kind="try" title="Trace the chain">
+  ```python
+  number = 0
+
+  if number > 0:
+      print("positive")
+  elif number == 0:
+      print("zero")
+  else:
+      print("negative")
+  ```
+
+  Now change `number` to `-4`, then to `3.5`, then to `"0"`. The last one
+  raises a `TypeError`, and the message explains exactly which comparison was
+  impossible.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `if` / `elif` / `else` runs top to bottom and stops at the first match, so
+  order branches from strictest to loosest. The colon introduces an indented
+  block, and indentation is syntax. Prefer guard clauses and early returns over
+  nesting, and never write `if x == True:`.
+</Callout>

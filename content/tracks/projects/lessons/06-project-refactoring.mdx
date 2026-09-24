@@ -1,0 +1,75 @@
+---
+title: "Refactoring Someone Else's Code"
+track: projects
+order: 6
+summary: "Improve code you did not write, without breaking it: characterise first, change one thing at a time, and let the tests be the safety net."
+xp: 10
+tags: [projects, refactoring]
+objectives:
+  - Write characterisation tests before changing anything
+  - Refactor in small, reversible steps
+  - Tell the difference between a cleanup and a redesign
+sources:
+  - title: "The Python Tutorial — 7. Input and Output"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/typing.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/typing.html"
+  - title: "Think Python, 2nd Edition — Chapter 19"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## Tests before opinions
+
+The rule for touching unfamiliar code: add tests that describe what it *does*,
+including the parts you think are wrong, before you change anything.
+
+```python
+def test_current_behaviour():
+    assert calculate_legacy("12.50", "9.99") == 21.24
+```
+
+Rounding appears to be wrong. Leave it. Get the test green with the current
+behaviour, and raise the bug separately with a test that says what it should be.
+Otherwise you cannot tell your fix from your assumption.
+
+## One transformation at a time
+
+The safe order is always the same:
+
+1. **Extract function** — pull a block out, change nothing.
+2. **Rename** — one name, everywhere.
+3. **Inline** — replace a used-once temporary with its expression.
+4. **Move** — put a function next to the one that calls it.
+5. **Simplify condition** — only when tests cover the branches.
+
+Run the tests after each. A refactor that passes at the end and fails halfway
+told you nothing.
+
+<Callout kind="watch" title="Long functions and deep nesting">
+  The standard smells: a function doing three jobs, an `if` nested five deep, a
+  name that needs a comment, a parameter nobody uses, the same block copied
+  three times. These are refactoring targets. A missing feature is not — that is
+  a design change and belongs in a separate change.
+</Callout>
+
+## Know when to stop
+
+Refactoring is done when the tests are green, the diff is reviewable, and the
+code you touched is easier to read than the code you found. If a change cannot
+be explained in one sentence, it is too big for one commit.
+
+<Callout kind="try" title="Measure before and after">
+  Count lines, nesting depth and cyclomatic complexity for the function before
+  you start. Run the tests. Refactor. Measure again. The numbers are how you
+  prove the change was worth making.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Characterise the current behaviour with tests, including the parts that look
+  wrong. Extract, rename, inline, move, simplify — one at a time, testing
+  between. Stop when the diff is reviewable and the code is clearer.
+</Callout>

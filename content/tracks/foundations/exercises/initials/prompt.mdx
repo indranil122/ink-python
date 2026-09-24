@@ -1,0 +1,43 @@
+---
+title: "Initials from a Full Name"
+track: foundations
+order: 6
+summary: "Turn a full name into initials, handling messy spacing."
+xp: 25
+difficulty: medium
+functionName: "initials"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The task
+
+Write `initials(full_name)` that returns the uppercase initials of a name,
+joined with a single space.
+
+```python
+initials("ada lovelace")  # "A L"
+```
+
+## Rules
+
+- Extra internal spaces are ignored: `"ada   lovelace"` is still `"A L"`.
+- Leading and trailing whitespace is ignored.
+- A single-word name returns one letter: `"prince"` is `"P"`.
+- An empty or whitespace-only string returns an empty string.
+
+## Hints
+
+Lesson 6 gives you the two tools this needs: `split()` to break a string on
+whitespace, and slicing to take the first character of each part. There are at
+least three reasonable ways to write the final join — pick the one you could
+explain to someone else.

@@ -1,0 +1,96 @@
+---
+title: "How HTTP Works"
+track: web
+order: 1
+summary: "The request-response cycle behind every web application: methods, status codes, headers, JSON bodies and statelessness."
+xp: 10
+tags: [web, http]
+objectives:
+  - Describe a request and a response
+  - Choose a method and a status code correctly
+  - Explain statelessness and what it forces on you
+sources:
+  - title: "The Python Tutorial — 7.2.1. Fancier Output Formatting"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/urllib.request.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/urllib.request.html"
+  - title: "The Python Standard Library — urllib"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/urllib.request.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## One request, one response
+
+```bash
+curl -X POST https://api.example.com/orders \
+  -H "Content-Type: application/json" \
+  -d '{"item": "keyboard", "quantity": 2}'
+```
+
+```text
+HTTP/1.1 201 Created
+Content-Type: application/json
+Location: /orders/1042
+
+{"id": 1042, "status": "pending"}
+```
+
+The client sends a **method**, a **path**, **headers** and sometimes a **body**.
+The server replies with a **status code**, **headers** and usually a JSON body.
+There is no persistent connection and no server memory of who you are.
+
+## Methods
+
+| Method | Means | Safe | Idempotent |
+| --- | --- | --- | --- |
+| `GET` | read | yes | yes |
+| `POST` | create or act | no | no |
+| `PUT` | replace | yes | yes |
+| `PATCH` | partial update | no | no |
+| `DELETE` | remove | yes | yes |
+
+Safe means it does not change state. Idempotent means repeating it leaves the
+same result as doing it once — which is what makes a retry of `PUT` safe and a
+retry of `POST` dangerous.
+
+## Status codes
+
+| Code | Means |
+| --- | --- |
+| 200 | OK, here is the result |
+| 201 | Created, here is the new resource |
+| 204 | No content, nothing to return |
+| 301 / 308 | Moved permanently |
+| 400 | Malformed request |
+| 401 | Not authenticated |
+| 403 | Authenticated but not allowed |
+| 404 | No such resource |
+| 409 | Conflict, e.g. duplicate |
+| 422 | Well-formed but semantically wrong |
+| 500 | The server broke |
+
+Returning 200 with `{"error": "..."}` in the body breaks every client
+expecting standard behaviour. Use the code that means what happened.
+
+<Callout kind="note" title="Stateless means the server forgets">
+  Each request must carry everything needed to understand it, usually an
+  authorisation token. Nothing is remembered between requests, which is why you
+  can put your API behind any load balancer and scale horizontally. The
+  consequence is that "who is this?" is answered on every single request.
+</Callout>
+
+## Headers carry the metadata
+
+`Content-Type` says what the body is, `Authorization` carries the token,
+`Cache-Control` says whether it may be stored, `Retry-After` tells a client when
+to come back. These are part of your API's contract, and changing one breaks
+clients as surely as changing a field name.
+
+<Callout kind="recap" title="Recap">
+  A request is method, path, headers and body; a response is status, headers and
+  body. Use the right method, return real status codes, and remember that
+  statelessness means every request re-authenticates.
+</Callout>

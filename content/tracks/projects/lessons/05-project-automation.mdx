@@ -1,0 +1,91 @@
+---
+title: "Project: Automation"
+track: projects
+order: 5
+summary: "Automate something you actually do: schedule it, make it idempotent, log it, and let it fail loudly."
+xp: 10
+tags: [projects, automation]
+objectives:
+  - Automate a real repeated task
+  - Make it safe to run twice
+  - Schedule it and observe it
+sources:
+  - title: "Automate the Boring Stuff with Python"
+    author: "Al Sweigart"
+    url: "https://automatetheboringstuff.com/"
+    license: "CC BY-NC-SA 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc-sa/3.0/"
+  - title: "The Python Tutorial — 7. Input and Output"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/argparse.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/argparse.html"
+---
+
+## Pick something real
+
+The best automation projects are the ones you already do badly by hand:
+renaming a folder of downloaded files, turning a spreadsheet into a report,
+checking a page for a change, backing up a folder to somewhere else. A month of
+repetition makes a month of good instincts about error handling.
+
+## Structure it as a command
+
+```python
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+    logging.basicConfig(level=args.log_level, format="%(asctime)s %(levelname)s %(message)s")
+    try:
+        count = archive_folder(args.source, args.destination, args.days)
+    except (OSError, PermissionError) as error:
+        logging.error("archive failed: %s", error)
+        return 1
+    logging.info("archived %d files", count)
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+A command has arguments, a log, and an exit code. That is enough to run from a
+scheduler and to be tested without running it.
+
+## Make it idempotent
+
+```python
+def archive_folder(source: Path, destination: Path, days: int) -> int:
+    moved = 0
+    for path in sorted(source.glob("*.pdf")):
+        age = (datetime.now() - path.stat().st_mtime).days
+        if age < days:
+            continue
+        target = destination / path.name
+        if target.exists():
+            logging.info("skipping existing %s", target.name)
+            continue
+        path.replace(target)
+        moved += 1
+    return moved
+```
+
+Run it twice: the second run must find nothing to do. Sorting the glob gives
+deterministic order, and skipping existing targets means a partial failure can
+be re-run safely.
+
+<Callout kind="watch" title="Never automate a destructive step without a check">
+  Deleting, overwriting and moving all have a moment where the wrong argument
+  destroys something. Dry-run first, validate every path, and prefer moving to
+  a trash directory over deleting.
+</Callout>
+
+<Callout kind="try" title="Ship and observe">
+  Run it manually, then schedule it weekly. Check the logs after a month. If you
+  have never looked at them, you do not know whether it has been working.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Automate a task you actually repeat. Give it arguments, structured logs and an
+  exit code. Make re-running harmless, and be conservative with anything
+  destructive.
+</Callout>

@@ -1,0 +1,59 @@
+---
+title: "Clamp a Value"
+track: functions
+order: 6
+summary: "Constrain a number to a range, and decide what happens when the bounds are reversed."
+xp: 25
+difficulty: easy
+functionName: "clamp"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Think Python, 2nd Edition — Chapter 3"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## The task
+
+Write `clamp(value, low, high)` returning `value` restricted to the inclusive
+range `[low, high]`.
+
+```python
+clamp(15, 0, 10)   # 10
+clamp(-5, 0, 10)   # 0
+clamp(5, 0, 10)    # 5
+```
+
+## Rules
+
+- Values equal to a bound are returned unchanged.
+- Reversed bounds raise `ValueError`: `clamp(5, 10, 0)` is a programming error,
+  not something to silently fix.
+
+## The shape
+
+```python
+if low > high:
+    raise ValueError("low must not exceed high")
+if value < low:
+    return low
+if value > high:
+    return high
+return value
+```
+
+The two comparisons are ordered rather than combined, which makes each branch
+obvious. Then write the one-line version with `min` and `max`, and decide which
+you would rather read at the call site.
+
+<Callout kind="try" title="Two versions">
+  Implement the explicit version, then the one-liner. Test both with the
+  reversed-bounds case and confirm the `ValueError` still comes from the same
+  place in both.
+</Callout>

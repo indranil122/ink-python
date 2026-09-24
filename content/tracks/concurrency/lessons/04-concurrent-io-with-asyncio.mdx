@@ -1,0 +1,91 @@
+---
+title: "Concurrent IO with asyncio"
+track: concurrency
+order: 4
+summary: "Sequential requests wait one after another. Concurrent requests wait at the same time. The difference is usually where the time goes."
+xp: 10
+tags: [concurrency, asyncio, io]
+objectives:
+  - Turn a sequential fetch loop into a concurrent one
+  - Bound concurrency with a semaphore
+  - Reuse one client and handle failures per item
+sources:
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "The Python Tutorial — 9.8. Coroutines"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/asyncio.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/asyncio.html"
+---
+
+## The problem with a loop
+
+```python
+results = []
+for url in urls:
+    results.append(fetch(url))
+```
+
+Five URLs at 200ms each take a second. The program spends 99% of its life
+waiting for a socket. That is time another request could have used.
+
+## Await them together
+
+```python
+results = await asyncio.gather(*(fetch(url) for url in urls))
+```
+
+The same five requests now take about as long as the slowest one, because they
+are in flight simultaneously.
+
+<Callout kind="note" title="Concurrency is not a free win">
+  A local file read gains nothing: there is no waiting to overlap. Concurrency
+  pays off when the work spends its time on the network or on disk, which is
+  most of what a data pipeline does.
+</Callout>
+
+## Bound it
+
+```python
+semaphore = asyncio.Semaphore(10)
+
+async def guarded(url):
+    async with semaphore:
+        return await fetch(url)
+```
+
+Launching 500 requests at once is not faster. They queue at the server, trip
+rate limits, and tie up sockets and memory. A semaphore turns "unlimited" into a
+number you chose deliberately — usually between 5 and 20 for a single host.
+
+## Failures are per item
+
+```python
+results = await asyncio.gather(
+    *(guarded(url) for url in urls),
+    return_exceptions=True,
+)
+
+good = [r for r in results if not isinstance(r, Exception)]
+failed = [(urls[i], r) for i, r in enumerate(results) if isinstance(r, Exception)]
+```
+
+Without `return_exceptions=True`, the first failure cancels the interpretation
+of the rest and you lose the successful results too. A pipeline wants partial
+success, reported.
+
+<Callout kind="try" title="Time both versions">
+  Fetch ten real URLs sequentially, then concurrently with a semaphore of 5.
+  Print both timings and the ratio. Then double the semaphore to 10 and see
+  whether it improves — the answer is usually no, and that is the knee.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Sequential awaits wait one at a time; `gather` overlaps them. Bound the
+  concurrency with a semaphore, reuse a single client, and collect per-item
+  exceptions so one failure does not lose the batch.
+</Callout>

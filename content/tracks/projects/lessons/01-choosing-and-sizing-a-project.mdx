@@ -1,0 +1,78 @@
+---
+title: "Choosing and Sizing a Project"
+track: projects
+order: 1
+summary: "Before writing code: what a good first project is, how to size it so it can be finished, and how to plan backwards from done."
+xp: 10
+tags: [projects, planning]
+objectives:
+  - Choose a project with a visible outcome
+  - Scope it to something finishable in two weeks
+  - Plan backwards from the finished state
+sources:
+  - title: "Think Python, 2nd Edition — Chapter 14"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "The Python Tutorial — 3. An Informal Introduction to Python"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## A good project has an outcome you can show
+
+"Something for my portfolio" is not a project. "A command line tool that turns a
+folder of receipts into a monthly summary" is: it has an input, an output, and
+a moment where you can say it works.
+
+Avoid projects whose progress you cannot see. A project you cannot demonstrate
+at week three is a project you will abandon at week four.
+
+## Size it to two weeks of evenings
+
+Ask three questions and cut until the answers are small:
+
+1. What is the one thing it does?
+2. What is the smallest version that still does that thing?
+3. What am I deliberately leaving out?
+
+The third question is the one people skip, and it is the one that keeps a
+project small. No web interface. No user accounts. No database unless the
+question genuinely needs one.
+
+## Plan backwards from done
+
+Write the last line first: the command someone runs, or the screen they see.
+
+```bash
+$ receipt-summary ~/Downloads/receipts --month 2026-09
+September 2026: 31 receipts, £412.60, mostly groceries
+```
+
+Everything else is in service of that. Work backwards: what must exist for that
+line to print? What does the parser need to return? What is the smallest input
+the parser must handle?
+
+## Write the risks down first
+
+- No input data? Find or generate some before starting.
+- An unfamiliar library? Read its quickstart today, not on the night you need it.
+- A dependency you cannot install? Check now.
+
+The projects that stall are the ones where a blocker appears in week two and
+cannot be solved.
+
+<Callout kind="try" title="Plan a weekend project">
+  Write, on one page: the exact command that runs it, the smallest useful
+  version, three things you are not building, and the first three tasks. If the
+  first three tasks are not each a day or less, the project is too big.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Choose something with a visible input and output, scope it to two weeks by
+  naming what you will not build, and plan backwards from the finished command.
+  Resolve data and dependency risks before you write code.
+</Callout>

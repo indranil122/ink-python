@@ -1,0 +1,136 @@
+---
+title: "Cleanup with try and finally"
+track: debugging
+order: 3
+summary: "Resources must be released even when the work fails. finally blocks and context managers are how Python guarantees that."
+xp: 10
+tags: [errors, resources]
+objectives:
+  - Use try/finally for cleanup
+  - Write a context manager with __enter__ and __exit__
+  - Recognise the built-in context managers
+sources:
+  - title: "The Python Tutorial — 8.3. Cleanup Actions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/errors.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: exceptions and context managers"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## The problem
+
+```python
+handle = open("data.csv")
+rows = parse(handle)
+handle.close()
+```
+
+If `parse` raises, `close` never happens. The file stays open until the garbage
+collector notices, which may be never in a long-running program. On Windows the
+file stays locked and you cannot delete it.
+
+## finally always runs
+
+```python
+handle = open("data.csv")
+try:
+    rows = parse(handle)
+finally:
+    handle.close()
+```
+
+Now cleanup happens on success, on failure, and even on an early `return`. This
+is the oldest form and it is still correct.
+
+## with is the same thing, plus more
+
+```python
+with open("data.csv") as handle:
+    rows = parse(handle)
+```
+
+`with` calls `__enter__` and guarantees `__exit__`, including when the body
+raises. It is shorter, impossible to get wrong by forgetting a line, and it is
+the form you should use.
+
+<Callout kind="note" title="Reach for with first">
+  Every resource in the standard library that needs releasing provides a
+  context manager: files, locks, database connections, `tempfile`, `zipfile`,
+  `subprocess`. The question "does this need a with block?" is faster than
+  "what do I need to close?"
+</Callout>
+
+## Writing your own
+
+```python
+class Timer:
+    def __enter__(self):
+        self.started = time.perf_counter()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.elapsed = time.perf_counter() - self.started
+        return False
+```
+
+```python
+with Timer() as timer:
+    do_work()
+
+print(timer.elapsed)
+```
+
+`__exit__` receives the exception information, so a context manager can do
+cleanup *and* decide whether to suppress the error. Returning a truthy value
+suppresses it; returning `False` or nothing lets it propagate. Almost every
+correct implementation returns `False`.
+
+<Callout kind="watch" title="Suppression is a big decision">
+  ```python
+  def __exit__(self, exc_type, exc_value, traceback):
+      self.rollback()
+      return exc_type is SomeExpectedError
+  ```
+
+  This is legitimate when the failure is genuinely handled by the rollback.
+  It is dangerous when used to make a test pass or to hide a bug in the body.
+  Write it, then make sure you can say in one sentence why suppressing is
+  correct here.
+</Callout>
+
+## Nested blocks
+
+```python
+with open("input.txt") as source, open("output.txt", "w") as target:
+    target.write(source.read())
+```
+
+The second manager is released first, in reverse order. For deeper nesting,
+`contextlib.ExitStack` manages an arbitrary number of cleanups and guarantees
+they all run.
+
+```python
+from contextlib import ExitStack
+
+with ExitStack() as stack:
+    first = stack.enter_context(open("a.txt"))
+    second = stack.enter_context(open("b.txt"))
+```
+
+<Callout kind="try" title="Prove the guarantee">
+  Write a small `Managed` class whose `__exit__` prints a message. Use it in a
+  `with` block whose body raises, and confirm the message still appears. Then
+  read its traceback and notice that the original error is still intact.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `try/finally` guarantees cleanup; `with` does the same and is easier to write
+  correctly. Any resource that needs releasing should be used in a `with` block.
+  `__enter__` returns the resource, `__exit__` always runs, and returning a
+  truthy value from it suppresses the exception.
+</Callout>

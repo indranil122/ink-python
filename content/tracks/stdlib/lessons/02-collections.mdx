@@ -1,0 +1,107 @@
+---
+title: "collections"
+track: stdlib
+order: 2
+summary: "Specialised containers for the structures you keep rebuilding: Counter, deque, defaultdict, namedtuple, OrderedDict and dataclasses."
+xp: 10
+tags: [stdlib, data-structures]
+objectives:
+  - Use Counter instead of a counting dict
+  - Choose deque for queues and stacks
+  - Use defaultdict and namedtuple when they simplify the code
+sources:
+  - title: "The Python Tutorial — 5. Data Structures"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/collections.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Counter
+
+```python
+from collections import Counter
+
+counts = Counter("mississippi")
+print(counts.most_common(2))
+```
+
+That replaces the `counts.get(word, 0) + 1` loop from Track 2. `Counter` is a
+dictionary subclass, so `counts["m"]` works, missing keys return `0` instead of
+raising, and arithmetic operators do the right thing:
+
+```python
+Counter("ab") - Counter("abc")   # Counter({"c": 1})
+```
+
+## deque
+
+```python
+from collections import deque
+
+queue = deque(["a", "b", "c"])
+queue.append("d")
+first = queue.popleft()
+print(queue, first)
+```
+
+`list.pop(0)` is linear, because every remaining item shifts down. `deque.popleft`
+is constant, which is the entire reason `deque` exists. Use it for queues,
+breadth-first search, and any sliding window.
+
+```python
+window = deque(maxlen=3)
+for value in stream:
+    window.append(value)
+```
+
+That is a rolling window of the last three values, with no slicing.
+
+## defaultdict
+
+```python
+from collections import defaultdict
+
+groups = defaultdict(list)
+groups["python"].append("asyncio")
+
+index = defaultdict(int)
+index["hits"] += 1
+```
+
+The factory is called the first time a key is missing, so the first line works
+without a `setdefault` dance. The trade is that `index["missing"]` now creates an
+entry, which can surprise you when you meant to test for absence.
+
+<Callout kind="watch" title="Use it where absence is an error">
+  In indexing and caching, a missing key usually means a bug. `defaultdict`
+  would hide it by inventing a value. Use it for grouping, where a new group is
+  a normal outcome, and a plain `.get` or `KeyError` everywhere else.
+</Callout>
+
+## namedtuple and dataclass
+
+```python
+from collections import namedtuple
+
+Point = namedtuple("Point", ["x", "y"])
+p = Point(1, 2)
+
+print(p.x, p == (1, 2))
+```
+
+Named tuples are tuples with field names, so they compare equal to the plain
+tuple and work as dictionary keys. For anything beyond two or three fields, use
+a dataclass — you met it in Track 4, and it is the better tool.
+
+<Callout kind="recap" title="Recap">
+  `Counter` for counting, `deque` for queues and sliding windows, `defaultdict`
+  for grouping, `namedtuple` for short fixed records, `dataclass` for anything
+  richer. Each exists because the hand-written version has a performance or
+  clarity cost.
+</Callout>

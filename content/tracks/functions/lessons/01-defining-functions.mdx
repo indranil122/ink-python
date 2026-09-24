@@ -1,0 +1,135 @@
+---
+title: "Defining Functions"
+track: functions
+order: 1
+summary: "Functions turn a block of code into a name you can reuse, test, and reason about. Covers definition, calling, and the return value."
+xp: 10
+tags: [functions]
+objectives:
+  - Define and call a function
+  - Understand what a function returns when it returns nothing
+  - Know when a function is too long to be one
+sources:
+  - title: "The Python Tutorial — 4.1. More Flow Control Tools"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 4"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## def, then call
+
+```python
+def greet():
+    print("Hello")
+
+
+greet()
+```
+
+Four spaces of indent, a colon, and a body. The name goes in parentheses; the
+braces you may expect are not Python's way.
+
+## Arguments and return values
+
+```python
+def add(left, right):
+    return left + right
+
+
+total = add(2, 3)
+print(total)
+```
+
+The names in the definition are **parameters**. The values at the call site are
+**arguments**. `return` sends a value back and ends the function immediately.
+
+<Callout kind="watch" title="A function that returns nothing returns None">
+  ```python
+  def shout(text):
+      print(text.upper())
+
+
+  result = shout("hello")
+  print(result)
+  ```
+
+  prints `HELLO` then `None`. Functions that only print are hard to test and
+  impossible to compose. If a caller will ever need the answer, return it.
+</Callout>
+
+## Early returns
+
+```python
+def first_even(values):
+    for value in values:
+        if value % 2 == 0:
+            return value
+    return None
+```
+
+Returning inside the loop avoids the flag variable and the nested `else`. This
+is the shape most professional Python uses: handle the interesting case, return,
+and let the rest fall away.
+
+## Order of definition does not matter at call time
+
+```python
+def main():
+    report()
+
+
+def report():
+    print("done")
+
+
+main()
+```
+
+`main` runs before `report` is defined, which is fine: the name `report` is only
+looked up when the call executes, by which point it exists. This is why
+`if __name__ == "__main__":` at the bottom of a script works.
+
+```python
+if __name__ == "__main__":
+    main()
+```
+
+That guard means the file can be imported without running anything.
+
+## Side effects versus values
+
+A function that **returns** a value is easy to test. A function that **prints**
+is not, because the answer is in the console rather than a value.
+
+```python
+def double_all(values):
+    return [value * 2 for value in values]
+```
+
+The caller decides what to do with the result. That is the difference between a
+reusable function and a script fragment.
+
+<Callout kind="try" title="Write it twice">
+  Write a function that prints a greeting, then rewrite it to return the
+  greeting string. Use the second version with `print` at the call site. Then
+  write a test for the second version — which is the argument for returning
+  values, demonstrated in one minute.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `def` names a function; parameters receive arguments; `return` sends a value
+  back and stops execution. Prefer returning values over printing, return early
+  instead of nesting, and guard script entry with
+  `if __name__ == "__main__":`.
+</Callout>

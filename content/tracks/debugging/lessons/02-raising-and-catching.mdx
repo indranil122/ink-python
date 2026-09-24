@@ -1,0 +1,139 @@
+---
+title: "Raising and Catching"
+track: debugging
+order: 2
+summary: "try, except, else and finally, what to catch and what never to catch, and the difference between handling a failure and hiding it."
+xp: 10
+tags: [errors]
+objectives:
+  - Write a try/except/else/finally block correctly
+  - Catch specific exception types
+  - Recognise code that hides failures
+sources:
+  - title: "The Python Tutorial — 8.2. Handling Exceptions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/errors.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: exceptions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## The four clauses
+
+```python
+try:
+    value = int(raw)
+except ValueError:
+    value = 0
+else:
+    print("parsed", value)
+finally:
+    print("always runs")
+```
+
+- `try` — the code that might fail.
+- `except` — what to do about a specific failure.
+- `else` — runs only if no exception was raised, so it cannot accidentally be
+  caught.
+- `finally` — always runs, used for cleanup.
+
+Putting the risky line alone in `try` and the rest in `else` is the professional
+layout: it guarantees the handler catches exactly the error it is written for.
+
+## Catch the narrowest thing
+
+```python
+try:
+    result = values[index]
+except IndexError:
+    result = None
+```
+
+```python
+try:
+    result = compute()
+except Exception:
+    result = None
+```
+
+The second version also swallows `KeyboardInterrupt`, `TypeError`, and bugs in
+`compute` that you would very much like to know about. It converts a crash into
+wrong data, which is far harder to debug.
+
+<Callout kind="watch" title="Silent failure is the expensive kind">
+  ```python
+  def safe_divide(a, b):
+      try:
+          return a / b
+      except Exception:
+          return 0
+  ```
+
+  This function cannot fail, which means it also cannot be wrong. Every caller
+  now has to defend itself against a zero that might mean *anything*. Catch what
+  you can handle; let the rest travel.
+</Callout>
+
+## Several handlers
+
+```python
+try:
+    payload = json.loads(raw)
+except json.JSONDecodeError as error:
+    raise ConfigError(f"line {error.lineno}: {error.msg}") from error
+except TypeError:
+    raise ConfigError("expected text") from None
+```
+
+Binding with `as` gives you the exception object. Chaining with `from error`
+keeps the cause; `from None` hides it deliberately, which is a decision you
+should make on purpose rather than by accident.
+
+## Handle it here, or raise it higher
+
+```python
+def load_port(raw):
+    try:
+        return int(raw)
+    except ValueError as error:
+        raise ValueError(f"port must be a number, got {raw!r}") from error
+```
+
+A function should either fully handle a failure or translate it into something
+more meaningful for its caller. Doing nothing useful in the `except` block is
+worse than not catching at all.
+
+<Callout kind="try" title="Three bad handlers">
+  ```python
+  try:
+      data = load()
+  except Exception:
+      pass
+
+  try:
+      data = load()
+  except Exception as error:
+      print(error)
+
+  try:
+      data = load()
+  finally:
+      cleanup()
+  ```
+
+  The first hides everything. The second hides everything but leaves a log line
+  nobody reads. The third catches nothing, so the exception still propagates —
+  which is fine, because `finally` was the point. Which of these would you
+  rather debug at 2am?
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Keep the risky operation alone in `try`, handle a specific exception type, and
+  use `else` for the code that should not be caught. Use `finally` for cleanup.
+  Either handle a failure properly or translate it and re-raise; never swallow
+  it silently.
+</Callout>

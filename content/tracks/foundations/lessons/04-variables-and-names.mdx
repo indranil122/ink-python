@@ -1,0 +1,155 @@
+---
+title: "Variables and Names"
+track: foundations
+order: 4
+summary: "Names are the main tool you have for explaining your program to a human. Learn the rules Python enforces, the conventions it expects, and the rebinding behaviour that trips up every beginner exactly once."
+xp: 10
+tags: [basics, variables]
+objectives:
+  - Follow Python's naming rules and conventions
+  - Predict what a name holds after a reassignment
+  - Avoid the three naming mistakes that make code hard to maintain
+sources:
+  - title: "The Python Tutorial — 6.2. Assignment statements"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Google's Python Class — Introduction and Variables"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "Think Python, 2nd Edition — Chapter 2"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## The rules Python actually enforces
+
+A name must obey all of these, or the interpreter rejects it immediately:
+
+- Letters, digits and underscores only. No spaces, no dashes, no most symbols.
+- Cannot start with a digit.
+- Cannot be a Python keyword, which is a small reserved list including `if`,
+  `for`, `class`, `import`, `return`, `True`, `False` and `None`.
+
+```python
+user_name = "Ada"
+_private = 2
+MAX_RETRIES = 5
+```
+
+## The conventions Python expects
+
+These are not enforced, but code that follows them reads as professional:
+
+- `snake_case` for variables and functions, `PascalCase` for classes.
+- Names that mean something: `items_in_cart`, not `x2`.
+- Singular for one thing, plural for a collection: `user`, `users`.
+- Constants in `UPPER_SNAKE_CASE`, as in `MAX_RETRIES` above.
+
+<Callout kind="note" title="Why names are the real deliverable">
+  Programs are read far more often than they are written. The person debugging
+  your code at 2am — often you — will get roughly one signal from the machine
+  and a great deal from the names. Naming well is not decoration.
+</Callout>
+
+## Assignment rebinds, it does not mutate
+
+This is the single most common beginner surprise, so work through it slowly.
+
+```python
+count = 1
+count = count + 1
+print(count)
+```
+
+The second line does not change the number `1`. It computes a new value, `2`,
+and binds the name `count` to it. The old value still exists; nothing refers
+to it any more.
+
+```python
+first = 10
+second = first
+second = second + 1
+print(first, second)
+```
+
+`first` is still `10`, because adding to `second` never touched the object
+`first` was bound to. Contrast that with a list:
+
+```python
+items = [1, 2]
+alias = items
+alias.append(3)
+print(items)
+```
+
+Now `items` is `[1, 2, 3]`, because `append` **mutated the shared object**
+rather than creating a new one. Rebinding a name and changing an object are
+different operations, and keeping them apart in your head is most of what
+"understanding data structures" means.
+
+<Callout kind="try" title="Trace it by hand">
+  Predict each final value before running anything:
+
+  ```python
+  a = "one"
+  b = a
+  b = b + " two"
+  print(a, b)
+
+  x = [1]
+  y = x
+  y.append(2)
+  print(x, y)
+  ```
+
+  The first pair diverges. The second pair does not. Same two shapes, opposite
+  outcomes, for one reason.
+</Callout>
+
+## Multiple assignment
+
+Python allows several names to be bound in one statement, which is compact and
+easy to misread.
+
+```python
+x, y = 10, 20
+x, y = y, x
+print(x, y)
+```
+
+The right-hand side is evaluated first, then names are bound left to right, so
+the swap works in one line.
+
+## Unpacking, briefly
+
+You will meet this properly in Track 2, but it is common enough to meet now:
+
+```python
+first, second, *rest = [1, 2, 3, 4, 5]
+print(first, second, rest)
+```
+
+The `*rest` collects whatever is left over into a list.
+
+<Callout kind="watch" title="Three mistakes to avoid">
+  1. Using a reserved word such as `list` or `sum` as a variable name. You are
+     shadowing a built-in, and the original function disappears from that
+     program.
+  2. Names that differ only by case in ways your editor cannot distinguish
+     visually, such as `total` and `Total`.
+  3. Reusing one name for several unrelated values in the same function. By the
+     end, `data` will mean three different things.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Names obey strict rules and soft conventions. Assignment rebinds a name;
+  mutating an object changes what every name bound to it can see. That single
+  distinction explains most "why did my list change" bugs. Prefer descriptive
+  `snake_case` names, and never shadow a built-in.
+</Callout>

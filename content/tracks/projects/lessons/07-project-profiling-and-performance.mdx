@@ -1,0 +1,94 @@
+---
+title: "Profiling and Performance"
+track: projects
+order: 7
+summary: "Measure before optimising: cProfile for hot functions, line_profiler for hot lines, and the optimisations that actually pay."
+xp: 10
+tags: [performance, profiling]
+objectives:
+  - Profile a slow program and read the output
+  - Distinguish an algorithm problem from a constant-factor problem
+  - Apply the optimisations that matter
+sources:
+  - title: "The Python Tutorial — The Python Standard Library"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/profile.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/profile.html"
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Measure first
+
+```python
+import cProfile, pstats
+
+with cProfile.Profile() as profile:
+    process_all(data)
+
+stats = pstats.Stats(profile)
+stats.sort_stats("cumulative").print_stats(15)
+```
+
+`cumulative` sorts by total time including sub-calls, which is what tells you
+where the time actually goes. The `ncalls`, `tottime` and `cumtime` columns are
+the three that matter.
+
+<Callout kind="note" title="Guess and check is not profiling">
+  Developers reliably guess wrong about hot code. The function that looks
+  expensive is often called once; the tiny helper inside a loop is usually the
+  culprit. Ten minutes with a profiler beats an hour of intuition.
+</Callout>
+
+## Algorithm before micro-optimisation
+
+```python
+# O(n²)
+if item in list_of_items: ...
+
+# O(n)
+seen = set(list_of_items)
+if item in seen: ...
+```
+
+Replacing a linear search inside a loop is usually a 100× win. Rewriting a
+function call to avoid a dictionary lookup is a 5% win. Do the first, and only
+then consider the second.
+
+## What actually helps
+
+```python
+result = [transform(row) for row in rows]           # comprehension
+result = list(map(transform, rows))                 # sometimes faster
+result = np.array(rows) * 2                         # vectorised
+```
+
+- **Precompute** anything that does not change inside a loop.
+- **Move work out of loops** entirely, not just a little.
+- **Batch IO** — one query instead of ten thousand.
+- **Cache** expensive calls with `functools.lru_cache` when inputs repeat.
+- **Vectorise** numeric work with NumPy instead of looping in Python.
+
+## What usually does not
+
+- Rewriting `for` as `while`.
+- Micro-tuning arithmetic on scalars.
+- Concatenating strings in a loop — use `join`.
+- Optimising code that runs once at startup.
+
+<Callout kind="try" title="Find the real cost">
+  Write a deliberately slow function, profile it, and change the one line the
+  profiler blames. Then try a different "obvious" optimisation that the profiler
+  never mentioned, and measure. Usually the first one wins by an order of
+  magnitude and the second does nothing.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Profile with `cProfile` and read the cumulative times. Fix the algorithm before
+  the constant factor. Precompute, batch IO, cache repeated work, vectorise
+  numeric loops — and leave code that runs once alone.
+</Callout>

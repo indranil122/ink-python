@@ -1,0 +1,82 @@
+---
+title: "Shipping and Presenting"
+track: projects
+order: 8
+summary: "The last ten percent: a README someone can follow, a deploy anyone can run, and a two-minute explanation of why the project exists."
+xp: 10
+tags: [projects, delivery]
+objectives:
+  - Write a README that gets someone running in a minute
+  - Ship a deployment anyone can reproduce
+  - Present the problem, the decision and the result
+sources:
+  - title: "The Python Tutorial — 7. Input and Output"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/argparse.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "PyPA Packaging Tutorial"
+    author: "Python Packaging Authority"
+    url: "https://packaging.python.org/en/latest/"
+    license: "PSF-style permissive"
+    licenseUrl: "https://packaging.python.org/en/latest/"
+---
+
+## The README is the project
+
+```markdown
+# csv-summary
+
+Summarise every CSV in a folder: rows, date range, and a chosen column's total.
+
+## Install
+
+    python -m pip install csv-summary
+
+## Use
+
+    csv-summary data/ --column total
+
+## Why
+
+Auditing a shared drive meant opening each file by hand. This does it in one
+command and prints one line per file.
+```
+
+Four sections: what it does, how to install, how to use, why it exists. A README
+that starts with a screenshot and no instructions is decoration.
+
+<Callout kind="note" title="A stranger must succeed">
+  Test it on a machine that knows nothing about you: clone, install, run. Every
+  failure is a missing sentence in the README.
+</Callout>
+
+## Make the deployment reproducible
+
+A deploy anyone can run beats a deploy only you can run. Commit a Dockerfile
+that builds the same image everywhere, keep configuration in environment
+variables, and include the exact commands in the README:
+
+```bash
+docker build -t csv-summary .
+docker run --rm -v "$PWD/data:/data" csv-summary /data
+```
+
+## Present it in two minutes
+
+1. **The problem** — one sentence, concrete, ideally something you had.
+2. **The shape of the solution** — the modules, and the one design decision
+   you would defend.
+3. **The result** — a demo, a screenshot, or three lines of output.
+4. **What you would do next** — shows you know its limits.
+
+<Callout kind="try" title="The five-minute test">
+  Give the README to someone, give them two minutes, then watch. Where they
+  hesitate, the README is failing. Fix that before you present anything.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  README: what, install, use, why. Deployment: reproducible from a commit. The
+  demo: problem, design decision, result, next step. Finishing well is part of
+  the engineering, not a separate task.
+</Callout>

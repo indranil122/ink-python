@@ -1,0 +1,119 @@
+---
+title: "Writing and Importing Modules"
+track: functions
+order: 9
+summary: "Turning working functions into a real module: clear boundaries, a public API, no accidental globals, and a test suite that runs on import."
+xp: 10
+tags: [modules, design]
+objectives:
+  - Decide what belongs in a module
+  - Design a small public API with leading underscores for internals
+  - Structure a module so tests can import it safely
+sources:
+  - title: "Exercism Python Track — concept: functions and modules"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "The Python Tutorial — 7. Input and Output"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/inputoutput.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## One job per module
+
+A module named `text.py` should do text things. A module that formats reports,
+sends mail and parses dates will be imported by all three, and any one of them
+can break the others.
+
+```text
+report/
+  __init__.py
+  formatting.py
+  loading.py
+  sending.py
+```
+
+Name the module after its responsibility, not after the project.
+
+## The public surface
+
+```python
+def normalise(text):
+    ...
+
+
+def _collapse_whitespace(text):
+    ...
+```
+
+By convention, a leading underscore means *internal*. Callers should not use it,
+which gives you freedom to change it. Everything without an underscore is
+effectively part of your API, and changing it later is a breaking change.
+
+<Callout kind="note" title="__all__ when the list gets long">
+  ```python
+  __all__ = ["normalise", "format_report"]
+  ```
+
+  This tells `from report import *` what to bring in, and documents the public
+  surface in one place. It does not restrict direct imports, so treat it as
+  documentation rather than enforcement.
+</Callout>
+
+## Module state is a choice
+
+```python
+DEBUG = False
+
+
+def log(message):
+    if DEBUG:
+        print(message)
+```
+
+Module-level constants are fine — they are created once, on import. A module
+that *writes* to a global as your program runs is back to the problem from the
+scope lesson: anything can change it, and the order of changes matters.
+
+## Structure a module for testing
+
+```python
+def parse(raw):
+    ...
+
+
+if __name__ == "__main__":
+    print(parse("example"))
+```
+
+The guard means a test can import `parse` without triggering the demo. Anything
+that must not run on import goes behind it.
+
+## Layering
+
+```text
+loading.py     reads bytes and hands over text
+parsing.py     turns text into structured data
+formatting.py  turns structured data into output
+```
+
+Each depends on the one below it, not sideways. When `formatting` needs new data,
+you change `parsing` once instead of hunting through every caller. This is the
+single most useful habit for code that has to keep working six months later.
+
+<Callout kind="try" title="Refactor on purpose">
+  Take the three functions from the previous exercise, move them into a module,
+  add one private helper with an underscore, and add the `__main__` guard. Then
+  write a test file that imports the module and checks the public functions
+  only.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  One responsibility per module, named for that responsibility. Underscore what
+  is internal. Keep module-level state read-only, guard demo code with
+  `if __name__ == "__main__":`, and layer modules so each depends only on what
+  is below it.
+</Callout>

@@ -1,0 +1,84 @@
+---
+title: "Testing an API"
+track: web
+order: 7
+summary: "Test an API at the level that matters: a real client, a real database, and the four cases that catch the expensive bugs."
+xp: 10
+tags: [web, testing]
+objectives:
+  - Use a test client against the real app
+  - Test with a real database, isolated per test
+  - Cover auth, boundaries and failure paths
+sources:
+  - title: "FastAPI Documentation — Testing"
+    author: "Sebastián Ramírez"
+    url: "https://fastapi.tiangolo.com/tutorial/testing/"
+    license: "MIT"
+    licenseUrl: "https://github.com/fastapi/fastapi/blob/main/LICENSE"
+  - title: "The Python Tutorial — 7.2.1. Fancier Output Formatting"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/http.client.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## A test client, not a mock
+
+```python
+from fastapi.testclient import TestClient
+
+client = TestClient(app)
+
+def test_health():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+```
+
+The client runs your real application in-process. Routing, dependencies,
+validation and serialisation all execute, so the test covers the parts that
+mocking throws away.
+
+## A real database, per test
+
+```python
+@pytest.fixture
+def db():
+    engine = create_engine(TEST_DATABASE_URL)
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
+    Base.metadata.drop_all(engine)
+```
+
+A real database, because SQLite accepts things Postgres rejects, and because
+constraints are part of what you are testing. Create the schema for the suite
+and drop it after, or run each test in a transaction you roll back.
+
+## The four cases worth writing
+
+1. **Happy path** — the request the endpoint exists for.
+2. **Validation** — missing field, wrong type, out-of-range value.
+3. **Authorization** — the second user cannot read the first user's resource.
+4. **Not found** — a valid id that does not exist, and one that is not an id.
+
+```python
+def test_other_user_cannot_read_order(client, token_a, token_b):
+    order_id = create_order(client, token_a)
+    response = client.get(f"/orders/{order_id}", headers=auth(token_b))
+    assert response.status_code == 404
+```
+
+That test is the one that would have caught a real breach.
+
+<Callout kind="note" title="Test through the public interface">
+  Import the app and call it the way a client does. Tests that reach into
+  internals break every time you refactor, and they never catch a wiring
+  mistake.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Use `TestClient` against the real app and a real database, isolated per test.
+  Cover the happy path, validation, authorization and not-found, and reach the
+  API only through its public interface.
+</Callout>

@@ -1,0 +1,100 @@
+---
+title: "Databases and SQL"
+track: web
+order: 4
+summary: "The four SQL verbs you need, how to write a schema with keys and constraints, and why parameterised queries are not optional."
+xp: 10
+tags: [web, sql]
+objectives:
+  - Write SELECT, INSERT, UPDATE and DELETE
+  - Design tables with primary and foreign keys
+  - Use parameters instead of string formatting
+sources:
+  - title: "The Python Tutorial — 7. Input and Output"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/sqlite3.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/sqlite3.html"
+---
+
+## Four verbs cover most work
+
+```sql
+SELECT id, name FROM users WHERE active = 1 ORDER BY name LIMIT 20;
+INSERT INTO users (name, email) VALUES (?, ?);
+UPDATE users SET name = ? WHERE id = ?;
+DELETE FROM users WHERE id = ?;
+```
+
+Filtering and ordering belong in SQL, not in Python, because the database is
+much better at it. Pull ten thousand rows into Python to filter them is the
+mistake every beginner makes once.
+
+## Schema design
+
+```sql
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orders (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
+    placed_at TIMESTAMP NOT NULL
+);
+
+CREATE INDEX idx_orders_user ON orders(user_id);
+```
+
+`NOT NULL`, `UNIQUE` and `CHECK` are rules the database enforces on every write,
+including the one your application forgot. The foreign key means an order cannot
+exist without a user. The index makes the common lookup fast.
+
+<Callout kind="note" title="Store money as integers">
+  `total_cents INTEGER`, not `total REAL`. Floating point cannot represent
+  0.10 exactly, and every ledger eventually disagrees with itself by a penny.
+</Callout>
+
+## Joins
+
+```sql
+SELECT u.name, COUNT(o.id) AS orders
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+GROUP BY u.id, u.name
+HAVING COUNT(o.id) > 0
+ORDER BY orders DESC;
+```
+
+`LEFT JOIN` keeps users with no orders; `WHERE o.id > 0` would silently drop
+them. `WHERE` filters rows before grouping, `HAVING` filters groups after.
+
+## Parameters, never strings
+
+```python
+cursor.execute(
+    "SELECT id, name FROM users WHERE email = ?",
+    (email,),
+)
+```
+
+<Callout kind="watch" title="SQL injection">
+  ```python
+  cursor.execute(f"SELECT * FROM users WHERE email = '{email}'")
+  ```
+
+  A value containing an apostrophe breaks it. A value crafted deliberately
+  deletes your data. The f-string version above is the vulnerability, and the
+  parameterised version above is the fix — for every query, every time, with no
+  exceptions to remember.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Filter and sort in SQL, not in Python. Put constraints in the schema and let
+  the database enforce them. `LEFT JOIN` plus `HAVING` for aggregates over
+  optional relationships, and always parameterise.
+</Callout>

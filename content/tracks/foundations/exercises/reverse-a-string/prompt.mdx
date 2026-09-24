@@ -1,0 +1,45 @@
+---
+title: "Reverse a String"
+track: foundations
+order: 13
+summary: "Return a string with its characters in the opposite order, without using slicing tricks you cannot yet explain."
+xp: 25
+difficulty: easy
+functionName: "reverse_string"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The task
+
+Write `reverse_string(text)` that returns the characters of `text` in reverse
+order.
+
+```python
+reverse_string("python")  # "nohtyp"
+```
+
+## Rules
+
+- Return a new string. Do not modify the input.
+- An empty string returns an empty string.
+- A single character returns itself.
+- Spaces and punctuation are characters too: `reverse_string("ab c")` is
+  `"c ba"`.
+
+## Two solutions worth writing
+
+1. Build the result one character at a time with a loop.
+2. Use slicing, which you met in lesson 6.
+
+Write the loop version first, then the slice version, then delete whichever one
+you cannot explain out loud in one sentence.

@@ -1,0 +1,95 @@
+---
+title: "Authentication and Authorization"
+track: web
+order: 6
+summary: "Who is this request from, what may they do, and why those are two different questions. Passwords, tokens, sessions and permissions."
+xp: 10
+tags: [web, security]
+objectives:
+  - Hash passwords correctly
+  - Choose between sessions and tokens
+  - Check authorization at the data layer
+sources:
+  - title: "The Python Tutorial — 7.5.1. Assertion Statements"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/secrets.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/secrets.html"
+  - title: "FastAPI Documentation — Security"
+    author: "Sebastián Ramírez"
+    url: "https://fastapi.tiangolo.com/tutorial/security/"
+    license: "MIT"
+    licenseUrl: "https://github.com/fastapi/fastapi/blob/main/LICENSE"
+---
+
+## Authentication is identity, authorization is permission
+
+"Who are you" and "what may you do" are separate checks, and conflating them is
+how one user's data ends up in another's hands.
+
+## Hash passwords
+
+```python
+import hashlib
+import hmac
+import secrets
+
+def hash_password(password: str, salt: bytes | None = None) -> str:
+    salt = salt or secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 600_000)
+    return f"pbkdf2${iterations}${salt.hex()}${digest.hex()}"
+
+def verify_password(password: str, stored: str) -> bool:
+    algorithm, iterations, salt_hex, digest_hex = stored.split("$")
+    candidate = hashlib.pbkdf2_hmac(
+        algorithm, password.encode(), bytes.fromhex(salt_hex), int(iterations)
+    )
+    return hmac.compare_digest(candidate.hex(), digest_hex)
+```
+
+Salt per user, a slow algorithm, and `compare_digest` so the comparison does
+not leak timing. `secrets` and `hmac` are both in the standard library;
+`argon2` or `bcrypt` are better still if you can take the dependency.
+
+<Callout kind="watch" title="Never store or log a password">
+  Not in the database, not in a log line, not in an error message, not in a
+  URL. Hash it once, at the moment it arrives, and forget it.
+</Callout>
+
+## Sessions or tokens
+
+A **session** stores state server-side and gives the client an opaque cookie.
+Logging out deletes it. A **token** is signed and self-contained; a JWT lets any
+service verify it without a database lookup, at the cost of not being revocable
+before it expires.
+
+For a single application, a session cookie with `HttpOnly`, `Secure` and
+`SameSite=Lax` is the simplest correct choice.
+
+## Authorize at the data layer
+
+```python
+@app.get("/orders/{order_id}")
+def get_order(order_id: int, db: DbSession, user=Depends(current_user)):
+    order = db.get(Order, order_id)
+    if order is None or order.user_id != user.id:
+        raise HTTPException(status_code=404)
+    return order
+```
+
+Checking `order.user_id` against the current user, every time, is what stops
+one user reading another's order. Filtering in the query is stronger still:
+`select(Order).where(Order.id == order_id, Order.user_id == user.id)` cannot
+forget the check.
+
+<Callout kind="try" title="Try to break it">
+  Add the check, then log in as a second user and request the first user's order
+  by id. Then move the check into the query and confirm the behaviour is
+  identical. The second version cannot be bypassed by a new endpoint.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Hash passwords with a per-user salt and a slow algorithm, and compare in
+  constant time. Sessions are simplest; tokens travel. Authorization belongs in
+  the query or at the data layer, on every request, every time.
+</Callout>

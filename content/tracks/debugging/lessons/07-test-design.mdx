@@ -1,0 +1,107 @@
+---
+title: "Test Design"
+track: debugging
+order: 7
+summary: "Fixtures for shared setup, parametrisation for the same claim with different data, and the difference between a unit test and an integration test."
+xp: 10
+tags: [testing, design]
+objectives:
+  - Share setup with fixtures and setUp
+  - Replace copy-pasted tests with parametrisation
+  - Know which layer a test belongs to
+sources:
+  - title: "Google's Python Class — Debugging and Unit Testing"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/lesson_10b_unit_testing.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "Exercism Python Track — concept: testing"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## Shared setup belongs in a fixture
+
+```python
+import pytest
+
+
+@pytest.fixture
+def basket():
+    return Basket(["apple", "bread"])
+```
+
+```python
+def test_total(basket):
+    assert basket.total() == 3.5
+```
+
+The fixture runs before each test that asks for it and gives every test a fresh
+object, so one test cannot leak state into the next. The `unittest` equivalent
+is `setUp`.
+
+## The same claim, many inputs
+
+```python
+@pytest.mark.parametrize(
+    "celsius, expected",
+    [(0, 32), (100, 212), (-40, -40), (37, 98.6)],
+)
+def test_to_fahrenheit(celsius, expected):
+    assert to_fahrenheit(celsius) == pytest.approx(expected)
+```
+
+Four tests, one body, and adding a case is one line. The equivalent in
+`unittest` is `subTest`. Copied test bodies drift apart; parametrised ones do
+not.
+
+<Callout kind="note" title="Why this matters beyond tidiness">
+  When a parametrised test fails, pytest names the exact parameters. With copied
+  bodies you have to read each one to find out which case broke. On a suite of
+  a hundred cases that is the difference between one minute and ten.
+</Callout>
+
+## One assertion cluster per test
+
+```python
+def test_rejects_negative_amounts():
+    with pytest.raises(ValueError):
+        Account().withdraw(-1)
+```
+
+Testing that a failure is raised is a claim of its own. `pytest.raises` states it
+directly; in `unittest`, `assertRaises`.
+
+## Which layer is this test on?
+
+| Test | Reaches | Speed | Answers |
+| --- | --- | --- | --- |
+| Unit | One function, no I/O | Milliseconds | Is this rule right? |
+| Integration | Several modules together | Seconds | Do these parts fit? |
+| End to end | The whole system, real I/O | Slow | Does the product work? |
+
+Put as much as possible in unit tests. They are fast enough to run on every
+change, and a failure points at one function instead of the whole stack. The
+end-to-end test that catches a wiring mistake should be a handful, not the bulk
+of the suite.
+
+<Callout kind="watch" title="Mocks are a last resort">
+  Replacing everything with a mock tests your assumptions about the mock. Use
+  them at a genuine boundary — the network, the clock, a payment API — and
+  prefer a real in-memory implementation everywhere else.
+</Callout>
+
+<Callout kind="try" title="Refactor a suite">
+  Take three copied test bodies that differ only in their input and turn them
+  into one parametrised test. Then add the boundary cases you were avoiding: the
+  empty input and the largest valid one. Count how many lines the suite gained,
+  and how much new coverage it bought.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Fixtures give every test fresh shared setup. Parametrisation replaces copied
+  bodies and names the failing case for you. Keep most tests at the unit level,
+  where a failure points at one function, and use mocks only at real boundaries.
+</Callout>

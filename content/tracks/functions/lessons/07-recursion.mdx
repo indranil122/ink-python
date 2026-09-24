@@ -1,0 +1,130 @@
+---
+title: "Recursion"
+track: functions
+order: 7
+summary: "A function that calls itself, two conditions that keep it terminating, and the reason most Python reaches for a loop first."
+xp: 10
+tags: [functions, recursion]
+objectives:
+  - Write a recursive function with a base case
+  - Recognise when recursion is the wrong tool in Python
+  - Avoid the depth limit without changing the design
+sources:
+  - title: "Think Python, 2nd Edition — Chapter 5"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "The Python Tutorial — Recursion Limit"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/sys.html#sys.setrecursionlimit"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## A function that calls itself
+
+```python
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+```
+
+Two parts make it work. The **base case** stops the recursion; the **recursive
+case** moves toward it. Remove the base case and the function never returns.
+
+```python
+print(factorial(5))   # 120
+```
+
+## Trees need recursion
+
+```python
+def total(node):
+    if node is None:
+        return 0
+    return node.value + total(node.left) + total(node.right)
+```
+
+There is no shorter way to say it. A tree is defined recursively, so a function
+that walks one usually is too.
+
+## The limit you will meet
+
+Python caps call depth at about 1000 frames by default. Deep recursion raises
+`RecursionError` rather than crashing the machine, which is a kindness.
+
+```python
+import sys
+
+sys.getrecursionlimit()
+```
+
+Raising the limit is a last resort: each frame uses memory, and a million-deep
+recursion is a million stack frames. If your data nests a thousand deep, the
+data model is usually the thing to fix.
+
+<Callout kind="watch" title="Recursion is usually slower in Python">
+  Each call builds a frame, and Python has no tail-call optimisation. For flat
+  data — lists, files, rows — an explicit loop is faster, clearer and has no
+  depth limit. Reach for recursion when the structure itself is recursive:
+  trees, nested dictionaries, parsing.
+</Callout>
+
+## Naive versus memoised
+
+```python
+def fib(n):
+    if n < 2:
+        return n
+    return fib(n - 1) + fib(n - 2)
+```
+
+`fib(35)` recomputes the same values thousands of times. A cache fixes it:
+
+```python
+from functools import lru_cache
+
+
+@lru_cache(maxsize=None)
+def fib(n):
+    if n < 2:
+        return n
+    return fib(n - 1) + fib(n - 2)
+```
+
+`lru_cache` turns exponential into linear, and is the first thing to try when a
+recursive function is too slow. Track 7 covers caching in general.
+
+## Accumulators
+
+Passing the running result down avoids rebuilding it on the way back up:
+
+```python
+def flatten(items, result=None):
+    if result is None:
+        result = []
+    for item in items:
+        if isinstance(item, list):
+            flatten(item, result)
+        else:
+            result.append(item)
+    return result
+```
+
+This is the shape to reach for when a recursive function feels slow.
+
+<Callout kind="try" title="Two versions">
+  Write a recursive `sum_list(values)` that adds a list, then write the loop
+  version. Then write a recursive `count_pairs(pairs)` that counts the pairs in
+  a list of pairs. The first is clearer as a loop, the second is barely possible
+  as anything else.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Every recursive function needs a base case and a step toward it. Python caps
+  depth near 1000 frames, so recursion suits tree-shaped data and not flat
+  sequences. `functools.lru_cache` fixes the usual slowness, and an accumulator
+  parameter avoids repeated concatenation.
+</Callout>

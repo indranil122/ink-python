@@ -1,0 +1,134 @@
+---
+title: "Iterables, Iterators and Generators"
+track: oop
+order: 8
+summary: "How for loops actually work, why iterators are exhausted, and how a generator turns a function into a lazy sequence."
+xp: 10
+tags: [oop, iteration]
+objectives:
+  - Explain the iterator protocol
+  - Write a generator with yield
+  - Implement __iter__ and __next__ on your own class
+sources:
+  - title: "The Python Tutorial — 9.5.2. Iterator Types"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/reference/datamodel.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## for asks for two things
+
+```python
+for item in values:
+    print(item)
+```
+
+is roughly
+
+```python
+iterator = iter(values)
+while True:
+    try:
+        item = next(iterator)
+    except StopIteration:
+        break
+    print(item)
+```
+
+`iter` returns an iterator, `next` pulls one value, and `StopIteration` ends it.
+Anything implementing those two methods works in a for loop, including your own
+classes, files, generators, dictionaries and `zip`.
+
+## Iterators are consumed once
+
+```python
+iterator = iter([1, 2, 3])
+
+print(list(iterator))
+print(list(iterator))
+```
+
+prints `[1, 2, 3]` then `[]`. An iterator is a cursor, not a container. This is
+why `next(it)` works and `next(it)` again gives the next value. If you need to
+go round twice, call `iter()` on the original sequence again.
+
+<Callout kind="watch" title="The classic trap">
+  ```python
+  for row in matrix:
+      row.append(0)
+  ```
+
+  appends a zero to every row, because `matrix` is a list of lists and you are
+  mutating the objects it holds. It is not the loop's fault: the list is not
+  exhausted, the inner lists are being changed.
+</Callout>
+
+## A generator is a function with yield
+
+```python
+def count_up(limit):
+    number = 1
+    while number <= limit:
+        yield number
+        number += 1
+```
+
+Calling it does not run the body. It returns a generator, which produces values
+on demand:
+
+```python
+total = sum(number * 2 for number in count_up(1_000_000))
+```
+
+Nothing is stored, and `sum` stops pulling as soon as it has enough. Generators
+are the reason you can process a file larger than memory.
+
+`yield` also makes a function stateful between calls, which is useful:
+
+```python
+def fibonacci():
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+```
+
+## Your own iterable
+
+```python
+class Countdown:
+    def __init__(self, start):
+        self.current = start
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.current <= 0:
+            raise StopIteration
+        self.current -= 1
+        return self.current + 1
+```
+
+`__iter__` returns the iterator — here the same object — and `__next__` returns
+one value or raises `StopIteration`. A generator does all of this for you, which
+is why it is nearly always the better choice.
+
+<Callout kind="try" title="Two ways to the same result">
+  Write `read_lines(path)` that yields each line of a file. Then write a version
+  that returns a list. Compare memory use on a large file, and compare what
+  happens when you stop reading halfway through.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `for` calls `iter` then `next` until `StopIteration`. Iterators are consumed
+  once. A function with `yield` returns a lazy generator, which stores nothing
+  and can handle data larger than memory. Implement `__iter__` and `__next__`
+  only when you need a stateful sequence of your own.
+</Callout>

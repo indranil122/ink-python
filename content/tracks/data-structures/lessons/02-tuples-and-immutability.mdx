@@ -1,0 +1,135 @@
+---
+title: "Tuples and Immutability"
+track: data-structures
+order: 2
+summary: "Tuples are lists that cannot change, which makes them safer as keys, as return values, and as fixed records. Includes named tuples and the unpacking that makes them pleasant."
+xp: 10
+tags: [data-structures, tuples]
+objectives:
+  - Explain what immutability buys you
+  - Use tuples as dictionary keys and set members
+  - Replace cryptic indices with unpacking and named tuples
+sources:
+  - title: "The Python Tutorial — 5.1. Using Lists as Stacks"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 3"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "Python for Everybody — Chapter 10"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## A tuple is a list that refuses to change
+
+```python
+point = (3, 5)
+empty = ()
+single = (42,)
+```
+
+Note the comma in `(42,)`. Without it, `(42)` is just the number 42 in
+parentheses, not a tuple at all. This trips up everyone once.
+
+```python
+point[0] = 4
+```
+
+raises `TypeError: 'tuple' object does not support item assignment`. That is the
+entire feature.
+
+## Why immutability is worth having
+
+A value that cannot change can be used where a changing value would be
+dangerous.
+
+```python
+locations = {
+    (0, 0): "origin",
+    (3, 4): "corner",
+}
+
+print(locations[(0, 0)])
+```
+
+Lists cannot be dictionary keys because a key that changes would break the
+lookup. Tuples can, because they never change.
+
+Tuples are also hashable, so they work as members of a set, and they are the
+default return type for functions that hand back several values:
+
+```python
+def min_max(values):
+    return min(values), max(values)
+
+smallest, largest = min_max([4, 1, 9])
+```
+
+That is the standard Python shape, and it is only possible because multiple
+return values arrive as a tuple.
+
+## Unpacking
+
+```python
+x, y = point
+first, *rest = [1, 2, 3, 4]
+head, tail = values[:-1], values[-1:]
+```
+
+Unpacking turns a fixed-size sequence into named variables, which removes the
+mystery of `result[0]` and `result[1]` from a function's contract.
+
+## Named tuples add field names
+
+```python
+from collections import namedtuple
+
+Point = namedtuple("Point", ["x", "y"])
+p = Point(3, 5)
+
+print(p.x)
+print(p[0])
+```
+
+A named tuple is still a tuple: it unpacks, it hashes, it works as a key. The
+only addition is that positions have names, so `p.x` says what `p[0]` cannot.
+
+For anything with more than two or three fields, reach for a dataclass instead
+— you will meet those in Track 4 — and treat named tuples as the lightweight
+option for fixed records.
+
+<Callout kind="watch" title="Single-element tuples">
+  ```python
+  print(type((42)))
+  print(type((42,)))
+  ```
+
+  The first is `int`. If you ever find yourself debugging a function that
+  returns a bare value when you expected a sequence, this is usually why.
+</Callout>
+
+## Comparison works element by element
+
+```python
+print((1, 2) < (1, 3))
+print((1, 2) == (1, 2))
+print((1, 2) < (1, 2, 0))
+```
+
+Tuples compare lexicographically: element by element, and a prefix is smaller
+than a longer tuple with the same prefix. This makes tuples a natural fit for
+sorting records by several fields at once.
+
+<Callout kind="recap" title="Recap">
+  Tuples are immutable, hashable sequences, which makes them ideal as
+  dictionary keys, set members and multi-value returns. Use `(42,)` for a
+  one-element tuple. Unpack them into named variables, and use `namedtuple` when
+  positions need names.
+</Callout>

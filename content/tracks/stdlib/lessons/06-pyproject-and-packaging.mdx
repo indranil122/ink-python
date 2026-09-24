@@ -1,0 +1,107 @@
+---
+title: "pyproject.toml and Packaging"
+track: stdlib
+order: 6
+summary: "Declaring a project in one file: name, version, dependencies, entry points, and how to install your own code in editable mode."
+xp: 10
+tags: [tooling, packaging]
+objectives:
+  - Write a pyproject.toml
+  - Declare dependencies with version constraints
+  - Install a project in editable mode and expose a command
+sources:
+  - title: "PyPA Packaging Tutorial — Package your project"
+    author: "Python Packaging Authority"
+    url: "https://packaging.python.org/en/latest/tutorials/packaging-projects/"
+    license: "PSF-style permissive"
+    licenseUrl: "https://packaging.python.org/en/latest/"
+  - title: "The Python Tutorial — 6.2.1. Creating a Module"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/modules.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## One file describes the project
+
+```toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ink-tools"
+version = "0.1.0"
+description = "Command line helpers for the Ink course"
+requires-python = ">=3.11"
+dependencies = ["requests>=2.31,<3"]
+
+[project.scripts]
+ink-count = "ink_tools.count:main"
+```
+
+`pyproject.toml` replaces `setup.py` and `setup.cfg` and is the standard for
+every modern tool. It states what the project is, what it needs, and how it
+should be built.
+
+## Dependency rules
+
+```toml
+dependencies = [
+  "requests>=2.31",
+  "pytest; extra == 'dev'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff"]
+```
+
+Pin a **range**, not an exact version, in your declaration: `>=2.31,<3`. The
+exact resolution belongs in a lock file, which records what you actually tested.
+A library that pins exact versions of its dependencies forces those versions on
+everyone who depends on it.
+
+<Callout kind="note" title="Requirements versus pyproject">
+  `requirements.txt` is what a machine installs; `pyproject.toml` is what a
+  project declares. Real projects keep both: the declaration for humans, the
+  lock file for reproducibility.
+</Callout>
+
+## Installing your own project
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+`-e` is editable: changes to your source take effect immediately, which is what
+you want while developing. The `[dev]` extra installs the optional group. Without
+`[dev]`, that group is skipped.
+
+## The src layout
+
+```text
+myproject/
+  pyproject.toml
+  src/
+    myproject/
+      __init__.py
+      count.py
+  tests/
+    test_count.py
+```
+
+Keeping the package under `src/` means an accidental import from the working
+directory cannot shadow the installed version — a class of bug that disappears
+the moment the project is tested from a clean checkout.
+
+<Callout kind="try" title="Ship a console script">
+  Create a project with one module, declare a `[project.scripts]` entry, install
+  it editable in a fresh virtual environment, and confirm the command appears on
+  your path. That is how `pip`, `black` and `pytest` all work.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `pyproject.toml` declares metadata, dependencies and entry points. Use version
+  ranges plus a lock file, install editable with `-e ".[extras]"`, and use the
+  `src/` layout so imports behave the same locally and in production.
+</Callout>

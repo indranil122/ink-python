@@ -1,0 +1,134 @@
+---
+title: "Your First Program"
+track: foundations
+order: 2
+summary: "Write, run, and break your first Python program on purpose, then read the traceback that Python prints when things go wrong."
+xp: 10
+tags: [basics, errors, print]
+objectives:
+  - Use print to produce output you can verify
+  - Read a traceback from the bottom line up
+  - Fix three common first-week mistakes yourself
+sources:
+  - title: "The Python Tutorial — 3. An Informal Introduction to Python"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 1, Debugging"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "CS50's Introduction to Programming with Python"
+    author: "Harvard University"
+    url: "https://cs50.harvard.edu/python/"
+    license: "CC BY-NC-SA 4.0"
+    licenseUrl: "https://cs50.harvard.edu/python/license/"
+---
+
+## Print is how you think out loud
+
+The `print` function writes a value to the console. It is the smallest useful
+feedback loop in programming: change something, run it, look at what happened.
+
+```python
+print("Ada Lovelace")
+print(1815)
+print(True)
+```
+
+Notice that quotes are not printed. They are Python syntax that says *this is
+text*, as opposed to `1815`, which is a number, and `True`, which is a
+boolean. Remove the quotes from any of those and the meaning changes, which is
+the subject of the next lesson.
+
+## Numbers need no ceremony
+
+In many languages you must declare a variable before using it and choose a type
+for it. Python does neither. You write a name, an equals sign, and a value.
+
+```python
+born = 1815
+age = 2026 - born
+print(age)
+```
+
+There is no `int`, no `var`, no semicolon. The name `born` is bound to the
+integer `1815`; the name `age` is bound to the result of the subtraction.
+
+<Callout kind="try" title="Predict, then run">
+  Before you run the next snippet, write down what you think it prints. Then run
+  it. If you were wrong, you have just learned something more valuable than if
+  you had been right.
+
+  ```python
+  x = 10
+  x = x + 5
+  print(x)
+  ```
+</Callout>
+
+## Break it on purpose
+
+Errors are not failures of character. They are Python handing you information.
+The fastest way to learn to read them is to produce one.
+
+```python
+print("I am about to fail)
+```
+
+Run that and you will see a **SyntaxError**. The last line of the report tells
+you the problem in plain words, and the line above points at the file and
+position. Read tracebacks **from the bottom upward**: the final line is the
+exception, and each line above it is a frame that led there.
+
+```text
+  File "/tmp/demo.py", line 1
+    print("I am about to fail)
+                            ^
+SyntaxError: unterminated string literal
+```
+
+Three details matter every time: the **exception name** (`SyntaxError`), the
+**message** (`unterminated string literal`), and the **file and line** where
+Python noticed the problem.
+
+<Callout kind="watch" title="The three mistakes you will make today">
+  1. A missing or doubled quote around a string.
+  2. A name that does not exist yet, or a typo in a name.
+  3. Indentation that does not line up once a `:` introduces a block.
+
+  All three produce a message that names the exact problem. None of them are
+  mysterious, and none of them are about your intelligence.
+</Callout>
+
+## Two mistakes worth trying now
+
+A **NameError** comes from using a name Python has never seen:
+
+```python
+print(total)
+```
+
+An **IndentationError** comes from inconsistent leading spaces, which Python
+will insist on for every block:
+
+```python
+if True:
+    print("four spaces")
+  print("two spaces — wrong")
+```
+
+## Run it, change it, run it again
+
+The loop you should form in the next ten minutes is this: paste a program, run
+it, change one thing, run it again, and read the output carefully. That loop,
+repeated a few hundred times, is the whole of beginner programming.
+
+<Callout kind="recap" title="Recap">
+  `print` produces output you can check. Variables need no declaration. When
+  something breaks, read the traceback from the bottom line up: the exception
+  name, its message, and the file and line where Python noticed. Break code on
+  purpose early — it is the fastest teacher in the language.
+</Callout>

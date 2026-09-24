@@ -1,0 +1,59 @@
+---
+title: "Apply Twice"
+track: functions
+order: 4
+summary: "Write a function that takes another function as an argument and applies it twice."
+xp: 25
+difficulty: medium
+functionName: "apply_twice"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Think Python, 2nd Edition — Chapter 10"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## The task
+
+Write `apply_twice(function, value)` that passes `value` through `function` twice
+and returns the result.
+
+```python
+apply_twice(lambda n: n + 3, 1)   # 7
+```
+
+The first argument is a function, which is the point: your parameter is annotated
+as a callable and called like any other object.
+
+## Rules
+
+- The function is called exactly twice, not in a loop.
+- Return the value from the second call, even if the first call returns
+  something unprintable.
+- Calling it with a built-in like `str` works too:
+  `apply_twice(str.strip, "  x  ")` is `"x"`.
+
+## Annotate it
+
+```python
+from collections.abc import Callable
+
+def apply_twice(function: Callable[[int], int], value: int) -> int:
+    return value
+```
+
+The annotation is the documentation *and* what a type checker uses to prove you
+call it correctly.
+
+<Callout kind="try" title="Compose two">
+  Write `compose(outer, inner, value)` that applies `inner` first and then
+  `outer`. With `outer=square` and `inner=increment` you get
+  `compose(square, increment, 3) == 16`. That function is the basis of
+  decorators, which you met in lesson 5.
+</Callout>

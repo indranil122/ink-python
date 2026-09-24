@@ -1,0 +1,109 @@
+---
+title: "Type Hints and Static Checks"
+track: stdlib
+order: 7
+summary: "Annotations that document and are checked before the program runs, using the standard library's typing module and a static checker."
+xp: 10
+tags: [tooling, typing]
+objectives:
+  - Annotate functions, parameters and containers
+  - Use Optional, Union, generics and protocols
+  - Run a static checker in CI
+sources:
+  - title: "The Python Tutorial — Annotations"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/typing.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/typing.html"
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Hints are not enforcement
+
+```python
+def to_fahrenheit(celsius: float) -> float:
+    return celsius * 9 / 5 + 32
+```
+
+Python ignores these at runtime. Their value is in the two consumers that do not:
+your editor, which uses them for completion and inline errors, and a static
+checker, which reads the whole codebase before you run anything.
+
+## The annotations you will use first
+
+```python
+from typing import Optional
+
+def find_user(user_id: str) -> Optional[dict]:
+    ...
+
+def load(names: list[str]) -> dict[str, int]:
+    ...
+
+Coordinates = tuple[float, float]
+
+def render(point: Coordinates) -> str:
+    ...
+```
+
+`Optional[X]` means `X | None`. Prefer `X | None` on Python 3.10 and later;
+`Optional` is the compatible spelling.
+
+## Generics for containers
+
+```python
+from collections.abc import Sequence
+
+def total(values: Sequence[float]) -> float:
+    return sum(values)
+```
+
+`Sequence[float]` says "any sequence of floats" and accepts lists, tuples and
+strings' relatives. `list[float]` is narrower: it requires a list. Naming the
+broadest thing that works makes the function easier to use and to test.
+
+```python
+from typing import TypeVar
+
+T = TypeVar("T")
+
+def first(values: Sequence[T]) -> T:
+    return values[0]
+```
+
+A `TypeVar` says the return type matches whatever went in.
+
+<Callout kind="watch" title="Not everything deserves a hint">
+  `def f(x: int) -> int:` on a private helper in a script adds noise. Annotate
+  the boundaries — public functions, data classes, anything crossing a module
+  — and let the checker infer the rest. A codebase where everything is annotated
+  is no more readable than one where nothing is.
+</Callout>
+
+## Protocols instead of inheritance
+
+```python
+from typing import Protocol
+
+class SupportsWrite(Protocol):
+    def write(self, text: str) -> int: ...
+```
+
+Any object with a matching `write` satisfies this, structurally and without
+inheriting. That is how modern Python expresses "duck typing, but checked".
+
+<Callout kind="try" title="Let the checker find a bug">
+  Annotate a module you have already written, run a checker over it, and look at
+  what it reports. Most first runs find a genuine mistake — usually a function
+  that can return `None` on a path the annotation claimed was impossible.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Hints are read by editors and static checkers, not by Python. Annotate
+  boundaries, use `X | None`, prefer `Sequence[T]` over `list[T]`, and reach
+  for a `Protocol` when you want a shape rather than a base class.
+</Callout>

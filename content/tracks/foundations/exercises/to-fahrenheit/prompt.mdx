@@ -1,0 +1,41 @@
+---
+title: "Celsius to Fahrenheit"
+track: foundations
+order: 17
+summary: "Convert a temperature in Celsius to Fahrenheit."
+xp: 25
+difficulty: easy
+functionName: "to_fahrenheit"
+sources:
+  - title: "Exercism Python Track — concept: numbers"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "The Python Tutorial — 3.1.1. First Steps Towards Programming"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The task
+
+Write `to_fahrenheit(celsius)` to convert degrees Celsius to degrees Fahrenheit
+using the formula
+
+```text
+F = C * 9/5 + 32
+```
+
+## Rules
+
+- Return a number, not a string.
+- `0` Celsius is `32` Fahrenheit. `100` Celsius is `212` Fahrenheit.
+- Negative temperatures must work.
+- Do not round. Return the raw result; formatting is somebody else's job.
+
+## Watch out
+
+In Python `9 / 5` is `1.8`, but `9 // 5` is `1`. Which one does the formula
+need?

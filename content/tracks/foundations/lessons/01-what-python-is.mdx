@@ -1,0 +1,133 @@
+---
+title: "What Python Is"
+track: foundations
+order: 1
+summary: "Python is a language you talk to an interpreter. This lesson covers how your text becomes running code, and why the runtime on this page is the same language you install at work."
+xp: 10
+tags: [basics, interpreter]
+objectives:
+  - "Explain what an interpreter does with your source file"
+  - "Name the three things every Python program does: take input, do work, produce output"
+  - "Recognise that the Python in this page is the same language as the one on your machine"
+sources:
+  - title: "The Python Tutorial — 1. Whetting Your Appetite"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 1"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "Pyodide documentation"
+    author: "The Pyodide community"
+    url: "https://pyodide.org/en/stable/usage/index.html"
+    license: "MPL-2.0 (runtime)"
+    licenseUrl: "https://github.com/pyodide/pyodide/blob/main/LICENSE"
+---
+
+## An interpreter, not a compiler you run yourself
+
+When you write `hello.py` and run `python hello.py`, two things happen. First,
+your text is **compiled** to a compact form called bytecode. Second, an
+interpreter executes that bytecode. Both steps happen every time you run the
+program, which is why there is no separate build command in Python.
+
+```python
+print("Hello, world!")
+```
+
+That is a complete program. It is also the first line of nearly every Python
+tutorial ever written, because the language's designers wanted the shortest
+possible path from a sentence in your head to something that happens on screen.
+
+<Callout kind="note" title="Why this matters">
+  Because there is no build step, there is no compiler sitting between you and
+  your mistakes. Python reports errors in **your** terms, with a line number
+  pointing at your file. That is a feature, and the next lesson shows you what
+  an error actually looks like.
+</Callout>
+
+## Every program does three things
+
+Almost all software, from a two-line script to a web server, is the same three
+moves repeated at different scales.
+
+1. **Input.** Get data from somewhere: a file, a keyboard, a network, a sensor.
+2. **Work.** Transform that data according to rules you wrote.
+3. **Output.** Produce a result: a printed line, a new file, a response.
+
+```python
+name = input("What is your name? ")
+print(f"Nice to meet you, {name}.")
+```
+
+Input comes from the keyboard. Work happens in the `+` between the two pieces
+of text. Output goes back to the terminal. Everything you write from here on is
+a variation on this shape.
+
+## The Python on this page is real Python
+
+The editor you will use throughout this course runs **CPython compiled to
+WebAssembly**, a project called Pyodide. It is not a JavaScript imitation of
+Python, and it is not a simplified teaching language. It is the same
+interpreter, the same standard library, the same error messages.
+
+```python
+import sys
+
+print(sys.version)
+```
+
+That prints a version string such as `3.14.0 (main, ...)`. When you later
+install Python on your own machine, you will see a line like this too.
+
+<Callout kind="try" title="Try it yourself">
+  Change the version line to `sys.platform` and run it again. Then try
+  `sys.maxsize`. These three attributes tell you what interpreter you are
+  talking to and how large a number it can hold.
+</Callout>
+
+## Names are labels on objects
+
+A variable in Python is not a box that stores a value. It is a **name bound to
+an object**. That distinction feels academic on day one and becomes the reason
+you understand mutability in Track 2.
+
+```python
+first = [1, 2, 3]
+second = first
+second.append(4)
+print(first)
+```
+
+The output is `[1, 2, 3, 4]`, because both names point at the same list. When
+you write `second = first.copy()`, the two names point at different objects and
+`first` stays `[1, 2, 3]`. You will meet this again immediately, in Track 2,
+with the words **alias** and **mutation**.
+
+## What Python is good at
+
+Python is a general-purpose language, which is a polite way of saying it can do
+almost anything. In practice it is strongest where the work is **glue** and
+**transformation**:
+
+- Reading, reshaping and cleaning data.
+- Automating repetitive file and system tasks.
+- Serving web backends and APIs.
+- Driving scientific and machine-learning libraries that other people wrote in
+  faster languages.
+
+The cost of that flexibility is speed and verbosity. A Python program is often
+shorter than its equivalent in a systems language, and often slower. For
+learning, and for the overwhelming majority of application work, that trade is
+clearly worth making.
+
+<Callout kind="recap" title="Recap">
+  Python compiles your source to bytecode and interprets it immediately. Every
+  program takes input, transforms it, and produces output. The runtime on this
+  site is CPython built for WebAssembly, so what you learn here transfers
+  directly to your own machine. Variables are names bound to objects, not boxes
+  that own values.
+</Callout>

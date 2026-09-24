@@ -1,0 +1,132 @@
+---
+title: "Nested Structures"
+track: data-structures
+order: 6
+summary: "Real data is rarely flat. Covers lists of dictionaries, dictionaries of lists, and how to reach into nested data without a chain of fragile index operations."
+xp: 10
+tags: [data-structures, nesting]
+objectives:
+  - Model real records with lists of dictionaries
+  - Read nested data safely with get
+  - Flatten and group nested data with comprehensions
+sources:
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+  - title: "Exercism Python Track — concept: lists and dictionaries"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "The Python Tutorial — 5.1. More on Lists"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## Records are usually dictionaries in a list
+
+```python
+users = [
+    {"name": "ada", "languages": ["python", "c"], "active": True},
+    {"name": "alan", "languages": ["python"], "active": False},
+]
+
+print(users[0]["name"])
+```
+
+A dictionary for each record, a list for the collection. This shape comes
+straight out of JSON, which is why it appears everywhere in real Python.
+
+## Reach in safely
+
+Chained indexing fails on the first missing level:
+
+```python
+users[5]["languages"][0]
+```
+
+raises `IndexError` before it ever gets to the key. `get` walks one level at a
+time and gives you a default at each step:
+
+```python
+record = users[0]
+languages = record.get("languages", [])
+first = languages[0] if languages else None
+```
+
+Slightly more typing, and it never explodes on unexpected input.
+
+<Callout kind="watch" title="Structure is a contract">
+  The nesting you choose is an interface. If three functions expect
+  `users[i]["name"]`, then a missing `name` key is a bug in all three. Decide
+  the shape once, validate it at the boundary, and keep the rest of the code
+  simple because of it.
+</Callout>
+
+## Grouping into a dictionary of lists
+
+```python
+by_language = {}
+
+for user in users:
+    for language in user["languages"]:
+        by_language.setdefault(language, []).append(user["name"])
+
+print(by_language)
+```
+
+`setdefault(key, [])` returns the existing list or inserts a new empty one
+first. It is the shortest readable form of the "get or create" pattern, and it
+works because the empty list is created before it is needed.
+
+## Flattening
+
+```python
+names = [user["name"] for user in users]
+languages = [language for user in users for language in user["languages"]]
+```
+
+The second comprehension has two `for` clauses. Read it inside-out: the inner
+one produces languages per user, the outer one walks the users.
+
+```python
+firsts = [user["languages"][0] for user in users if user["languages"]]
+```
+
+Conditions go at the end, and they can protect the expression that comes before
+them. That ordering is the whole safety mechanism.
+
+## Dictionaries of dictionaries
+
+```python
+scores = {
+    "ada": {"python": 100, "math": 98},
+    "alan": {"python": 91, "math": 95},
+}
+
+for person, subjects in scores.items():
+    average = sum(subjects.values()) / len(subjects)
+    print(person, round(average, 1))
+```
+
+When nesting goes three or four levels deep, stop and use objects instead —
+dataclasses in Track 4 exist precisely because `record["user"]["address"][
+"city"]` is unreadable.
+
+<Callout kind="try" title="Three shapes, one question">
+  Take a list of file names like `["report.2024.csv", "notes.txt"]`. Build:
+  1. a list of dictionaries with `name` and `suffix`,
+  2. a dictionary mapping suffix to a list of names,
+  3. a list of names without suffixes.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  A list of dictionaries models records; a dictionary of lists models grouping.
+  Use `get` at each level when a key may be missing, and `setdefault` to build
+  up a grouped structure in a loop. Flatten with a comprehension, and switch to
+  dataclasses when nesting passes three levels.
+</Callout>

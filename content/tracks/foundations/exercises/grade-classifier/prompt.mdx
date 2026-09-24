@@ -1,0 +1,44 @@
+---
+title: "Grade Classifier"
+track: foundations
+order: 4
+summary: "Turn a numeric score into a letter grade with a clean if/elif/else chain."
+xp: 25
+difficulty: easy
+functionName: "classify_grade"
+sources:
+  - title: "Google's Python Class — Conditionals"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/conditionals.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "Exercism Python Track — concept: conditionals"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## The task
+
+Write `classify_grade(score)` returning a letter grade.
+
+| Score | Grade |
+| --- | --- |
+| 90–100 | `A` |
+| 80–89 | `B` |
+| 70–79 | `C` |
+| 60–69 | `D` |
+| below 60 | `F` |
+
+## Rules
+
+- Return a single letter string.
+- 90 returns `A`, 89 returns `B`, 60 returns `D`, 59 returns `F`.
+- Scores above 100 also return `A`.
+
+## The lesson
+
+Write the branches from the highest threshold down. If you write `if score >=
+60` first, every passing student gets a `D` and the rest of the chain is dead
+code. Order is the whole exercise.

@@ -1,0 +1,67 @@
+---
+title: "Counter Closure"
+track: functions
+order: 7
+summary: "Return a function that counts, with each counter keeping its own private state."
+xp: 25
+difficulty: medium
+functionName: "make_counter"
+sources:
+  - title: "The Python Tutorial — 4.1. More Flow Control Tools"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## The task
+
+Write `make_counter()` that returns a function. Each call of the returned
+function returns the next integer, starting at 1.
+
+```python
+counter = make_counter()
+counter()   # 1
+counter()   # 2
+```
+
+## Rules
+
+- Two counters are independent: two from the same call must not share a count.
+- The returned function takes no arguments.
+- A counter never resets.
+
+## The shape
+
+```python
+def make_counter():
+    count = 0
+
+    def increment():
+        nonlocal count
+        count += 1
+        return count
+
+    return increment
+```
+
+`count` lives in the enclosing function's scope, and the returned function keeps
+it alive after `make_counter` has returned. `nonlocal` is what allows the inner
+function to rebind it — without that line, `count += 1` would create a new local
+name and raise `UnboundLocalError`.
+
+<Callout kind="try" title="Prove the independence">
+  ```python
+  a = make_counter()
+  b = make_counter()
+  print(a(), a(), b(), a())
+  ```
+
+  Expect `1 2 1 3`. If `b` continues `a`'s count, you have accidentally used a
+  mutable default or a class attribute instead of a closure.
+</Callout>

@@ -1,0 +1,139 @@
+---
+title: "Parameters and Arguments"
+track: functions
+order: 2
+summary: "Positional and keyword arguments, defaults, *args and **kwargs, and the keyword-only trick that stops a whole class of bugs."
+xp: 10
+tags: [functions]
+objectives:
+  - Call a function positionally and by keyword
+  - Use default values safely
+  - Force arguments after a point to be keywords
+sources:
+  - title: "The Python Tutorial — 4.1. More Flow Control Tools"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## Positional and keyword
+
+```python
+def connect(host, port=5432, timeout=30):
+    return f"{host}:{port} in {timeout}s"
+
+
+connect("localhost")
+connect("localhost", 5433)
+connect("localhost", timeout=5)
+connect(host="db", port=5432)
+```
+
+Arguments fill parameters left to right unless you name them. Naming one skips
+the others, as long as the skipped ones have defaults.
+
+<Callout kind="watch" title="Mutable defaults are a trap">
+  ```python
+  def collect(item, bucket=[]):
+      bucket.append(item)
+      return bucket
+
+
+  print(collect(1))
+  print(collect(2))
+  ```
+
+  prints `[1]` then `[1, 2]`. The default is created once, when the function is
+  defined, and every call shares it. The fix is `bucket=None` and a new list
+  inside the body. It is the single most common Python bug that has no analogue
+  in most other languages.
+</Callout>
+
+## *args collects positionally
+
+```python
+def total(*values):
+    return sum(values)
+
+
+total(1, 2, 3)
+```
+
+`values` is a tuple. Useful when the number of inputs is genuinely unknown.
+
+## **kwargs collects by keyword
+
+```python
+def report(title, **options):
+    return title, options
+
+
+report("run", retries=3, verbose=True)
+```
+
+`options` is a dictionary. This is how configuration objects are passed without
+inventing a class.
+
+## Forcing keywords after a point
+
+```python
+def scale(values, *, factor=2, offset=0):
+    return [value * factor + offset for value in values]
+
+
+scale([1, 2], factor=10)
+```
+
+The bare `*` means everything after it must be named. `scale([1, 2], 10)` is now
+a `TypeError` instead of a silent misunderstanding.
+
+<Callout kind="note" title="A rule of thumb">
+  If a function has more than two or three parameters of the same type, make the
+  later ones keyword-only. Callers then read like prose, and the function can
+  gain parameters without breaking anyone.
+</Callout>
+
+## Passing by assignment
+
+Arguments are assigned to parameters, exactly like any other name.
+
+```python
+def shout(text):
+    return text.upper()
+
+
+message = "hello"
+shout(message)
+print(message)
+```
+
+`message` is unchanged. Strings are immutable, so nothing can affect the caller.
+Pass a list and a method that mutates it, and the caller *will* see the change —
+the lesson from Track 2, applied to parameters.
+
+<Callout kind="try" title="Spot the difference">
+  ```python
+  def add_item(basket, item):
+      basket.append(item)
+
+
+  def add_item_copy(basket, item):
+      basket = [*basket, item]
+      return basket
+  ```
+
+  Call both with one list and print it. The first mutates the caller's list; the
+  second rebinds a local name and changes nothing outside the function.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Arguments fill parameters positionally unless named. Default values are
+  evaluated once, so never use a mutable default. `*args` collects positionally,
+  `**kwargs` by keyword, and a bare `*` forces everything after it to be named.
+</Callout>

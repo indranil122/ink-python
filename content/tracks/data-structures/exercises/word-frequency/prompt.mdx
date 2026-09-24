@@ -1,0 +1,46 @@
+---
+title: "Word Frequency"
+track: data-structures
+order: 15
+summary: "Count word frequencies and return them sorted from most common to least."
+xp: 25
+difficulty: medium
+functionName: "word_frequency"
+sources:
+  - title: "Exercism Python Track — concept: lists and dictionaries"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The task
+
+Write `word_frequency(text)` returning `(word, count)` pairs sorted by count,
+highest first.
+
+```python
+word_frequency("a b a")  # [("a", 2), ("b", 1)]
+```
+
+## Rules
+
+- Compare case-insensitively: `A` and `a` are the same word.
+- Ignore punctuation entirely: `"a, b"` is two words.
+- Ties keep alphabetical order.
+- An empty or punctuation-only string returns an empty list.
+
+## The two halves
+
+Counting is a dictionary accumulator. Sorting is `sorted(pairs, key=...)`. The
+tie-break is the interesting part: sort by count descending, then by word
+ascending, which needs a tuple key.
+
+```python
+sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+```

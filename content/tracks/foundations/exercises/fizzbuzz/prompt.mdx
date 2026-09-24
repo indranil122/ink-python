@@ -1,0 +1,51 @@
+---
+title: "FizzBuzz Line"
+track: foundations
+order: 3
+summary: "Return the FizzBuzz string for one number using the classic rules."
+xp: 25
+difficulty: medium
+functionName: "fizzbuzz_line"
+sources:
+  - title: "Exercism Python Track — concept: conditionals"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "CS50's Introduction to Programming with Python"
+    author: "Harvard University"
+    url: "https://cs50.harvard.edu/python/"
+    license: "CC BY-NC-SA 4.0"
+    licenseUrl: "https://cs50.harvard.edu/python/license/"
+---
+
+## The task
+
+Write `fizzbuzz_line(number)` that returns the classic string for one number.
+
+- Divisible by 3 **and** 5: `"FizzBuzz"`
+- Divisible by 3 only: `"Fizz"`
+- Divisible by 5 only: `"Buzz"`
+- Otherwise: the number as a string
+
+```python
+fizzbuzz_line(15)  # "FizzBuzz"
+fizzbuzz_line(7)   # "7"
+```
+
+## Rules
+
+- Return a string every time, including for plain numbers.
+- Zero is divisible by everything, so `fizzbuzz_line(0)` is `"FizzBuzz"`.
+- Negative numbers follow the same rules: `fizzbuzz_line(-3)` is `"Fizz"`.
+
+## The lesson
+
+This exercise exists to prove one point: **condition order matters**. If you
+test for divisibility by 3 first and return `"Fizz"` immediately, number 15
+can never reach the `"FizzBuzz"` branch. Check the most specific case first.
+
+<Callout kind="try" title="Extend it after it passes">
+  Once your function is correct, print `fizzbuzz_line` for 1 to 20 in a loop.
+  That is the full FizzBuzz interview question, and it takes three lines.
+</Callout>

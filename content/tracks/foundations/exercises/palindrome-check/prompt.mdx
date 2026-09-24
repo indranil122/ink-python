@@ -1,0 +1,46 @@
+---
+title: "Palindrome Check"
+track: foundations
+order: 12
+summary: "Decide whether text reads the same forwards and backwards, ignoring case and spacing."
+xp: 25
+difficulty: medium
+functionName: "is_palindrome"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The task
+
+Write `is_palindrome(text)` that returns `True` when the text reads the same in
+both directions.
+
+```python
+is_palindrome("A man, a plan, a canal: Panama")  # True
+```
+
+## Rules
+
+- Ignore case.
+- Ignore every character that is not a letter or a digit.
+- An empty string, or a string with nothing left after cleaning, is a
+  palindrome.
+
+## Build it in two steps
+
+Cleaning and checking are separate problems, and mixing them is why this
+exercise is harder than it looks. First produce the normalised text, then
+compare it with its reverse.
+
+```python
+cleaned = "".join(c for c in text.lower() if c.isalnum())
+```

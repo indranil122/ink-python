@@ -1,0 +1,89 @@
+---
+title: "Processes"
+track: concurrency
+order: 3
+summary: "When the work is CPU-bound, stop fighting the GIL: run it in separate processes, and pay for the serialisation that comes with them."
+xp: 10
+tags: [concurrency, processes]
+objectives:
+  - Use multiprocessing and ProcessPoolExecutor
+  - Understand pickling and what cannot cross the boundary
+  - Choose processes only for real CPU work
+sources:
+  - title: "The Python Tutorial — 17.2. multiprocessing"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/multiprocessing.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/multiprocessing.html"
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Separate interpreters, separate memory
+
+```python
+from concurrent.futures import ProcessPoolExecutor
+
+def is_prime(number):
+    ...
+
+with ProcessPoolExecutor() as pool:
+    results = list(pool.map(is_prime, range(2, 1_000_000)))
+```
+
+Each worker is its own Python process with its own GIL, so N cores can work at
+once. The function and every argument must be picklable to cross the boundary.
+
+<Callout kind="watch" title="Pickling is the tax">
+  Arguments and return values are serialised to bytes and back. That costs real
+  time, and some objects cannot be serialised at all: an open file, a database
+  connection, a socket, a lambda, a lock. For large arrays, the copying can
+  dominate the work you were trying to parallelise.
+</Callout>
+
+## What cannot cross
+
+```python
+pool.submit(work, open("data.csv"))          # TypeError: cannot pickle
+pool.submit(work, lambda x: x ** 2)          # AttributeError
+```
+
+This is why process pools are awkward for IO-bound work, where the natural
+arguments are connections and clients. Module-level functions work; closures
+and lambdas do not.
+
+## Protecting from the other end
+
+```python
+if __name__ == "__main__":
+    main()
+```
+
+Windows and macOS start processes with `spawn`, which re-imports the module.
+Without the guard, that re-import runs your code again and you get a process
+that forks forever. The guard is required on those platforms and harmless
+everywhere.
+
+<Callout kind="note" title="Threads first, then processes">
+  Processes cost memory, serialisation and complexity. Use them when a profile
+  shows the CPU is the bottleneck, not before. For numeric work, a library that
+  releases the GIL — NumPy, or a compiled extension — is usually faster than any
+  amount of process management.
+</Callout>
+
+<Callout kind="try" title="Compare the two">
+  Time a pure-Python prime check over a large range with a thread pool and then
+  with a process pool. The thread version will be no faster than serial; the
+  process version will scale with your cores until memory and pickling start to
+  bite.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `ProcessPoolExecutor` gives real parallelism for CPU-bound work, at the cost of
+  pickling every argument and result. Only picklable objects cross the boundary,
+  and `if __name__ == "__main__":` is mandatory on spawn platforms. Use threads
+  for waiting and processes for calculating.
+</Callout>

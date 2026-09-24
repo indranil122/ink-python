@@ -1,0 +1,109 @@
+---
+title: "Paths with pathlib"
+track: files
+order: 3
+summary: "The pathlib module replaces string concatenation with objects that know how to join themselves, check themselves, and work on any platform."
+xp: 10
+tags: [files, paths]
+objectives:
+  - Build paths without string concatenation
+  - Use glob, exists, mkdir and iterdir
+  - Handle paths as objects rather than strings
+sources:
+  - title: "The Python Tutorial — 10.6. File Access"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/pathlib.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## The old way and the new one
+
+```python
+import os
+
+path = os.path.join("data", "raw", "input.csv")
+if os.path.exists(path):
+    with open(path) as handle:
+        ...
+```
+
+```python
+from pathlib import Path
+
+path = Path("data") / "raw" / "input.csv"
+if path.exists():
+    print(path.read_text(encoding="utf-8"))
+```
+
+`/` joins, `read_text` and `write_text` handle the file, and the result is an
+object rather than a string that happens to look like a path.
+
+## Every path is the same class
+
+```python
+home = Path.home()
+current = Path.cwd()
+config = Path("/etc/app/config.toml")
+```
+
+`Path` and `PurePath` are interchangeable; `Path` adds the filesystem methods.
+`PurePosixPath` and `PureWindowsPath` do the joining without touching disk,
+which is what you want in tests.
+
+## Useful methods
+
+```python
+path.suffix        # ".csv"
+path.stem          # "input"
+path.name          # "input.csv"
+path.parent        # Path("data/raw")
+path.with_suffix(".parquet")
+```
+
+`with_name` and `with_stem` change the last component without string slicing,
+and they refuse to do anything ambiguous.
+
+## Finding things
+
+```python
+for path in Path("data").rglob("*.csv"):
+    print(path, path.stat().st_size)
+```
+
+`glob` matches one level, `rglob` recurses, and both return generators, so
+`iterdir`, `glob` and `rglob` compose with a comprehension:
+
+```python
+sizes = [p.stat().st_size for p in Path("data").glob("*.csv")]
+largest = max(sizes, default=0)
+```
+
+<Callout kind="note" title="Path operations are pure">
+  `path / "x"` never touches the disk. Only `exists`, `stat`, `read_text` and
+  friends do. That means path-building code is trivially testable, which is one
+  of the reasons `pathlib` replaced `os.path` in new code.
+</Callout>
+
+## Creating and cleaning
+
+```python
+output = Path("data/processed")
+output.mkdir(parents=True, exist_ok=True)
+output.joinpath("clean.csv").write_text(body, encoding="utf-8")
+```
+
+`parents=True` creates intermediate directories, and `exist_ok=True` makes the
+call idempotent — which matters in scripts you will run more than once.
+
+<Callout kind="recap" title="Recap">
+  `Path` objects join with `/`, report their parts as properties, and expose
+  `glob`, `rglob`, `iterdir`, `mkdir` and `stat`. Use `with_suffix` and
+  `with_name` instead of string surgery, and `mkdir(parents=True,
+  exist_ok=True)` for directories your script creates.
+</Callout>

@@ -1,0 +1,43 @@
+---
+title: "Temperature Summary"
+track: foundations
+order: 16
+summary: "Turn a Celsius reading into a word description with nested conditions."
+xp: 25
+difficulty: easy
+functionName: "describe_temperature"
+sources:
+  - title: "Exercism Python Track — concept: conditionals"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "CS50's Introduction to Programming with Python"
+    author: "Harvard University"
+    url: "https://cs50.harvard.edu/python/"
+    license: "CC BY-NC-SA 4.0"
+    licenseUrl: "https://cs50.harvard.edu/python/license/"
+---
+
+## The task
+
+Write `describe_temperature(celsius)` returning a description.
+
+| Celsius | Result |
+| --- | --- |
+| at or below 0 | `"freezing"` |
+| 1 to 10 | `"cold"` |
+| 11 to 20 | `"mild"` |
+| 21 to 30 | `"warm"` |
+| above 30 | `"hot"` |
+
+## Rules
+
+- Boundaries belong to the colder band: 10 is `"cold"`, 20 is `"mild"`.
+- Floats and integers both work.
+
+## The lesson
+
+This is a chain of five conditions, which is the point: real code is mostly
+long chains. Write it top to bottom from the strictest threshold, and resist the
+urge to use a dictionary lookup, which cannot express `<=` without extra work.

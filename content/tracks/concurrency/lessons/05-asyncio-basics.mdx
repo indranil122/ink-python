@@ -1,0 +1,97 @@
+---
+title: "asyncio Basics"
+track: concurrency
+order: 5
+summary: "One thread, many coroutines: async def, await, and running an event loop that keeps a program busy while everything waits."
+xp: 10
+tags: [concurrency, asyncio]
+objectives:
+  - Write a coroutine and await it
+  - Run several coroutines concurrently with gather
+  - Understand that asyncio is for waiting
+sources:
+  - title: "The Python Tutorial — 9.8. Coroutines"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/asyncio.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/asyncio.html"
+---
+
+## async def and await
+
+```python
+import asyncio
+
+async def fetch(session, url):
+    async with session.get(url) as response:
+        return await response.text()
+
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        pages = await asyncio.gather(
+            *(fetch(session, url) for url in urls)
+        )
+    return pages
+
+
+asyncio.run(main())
+```
+
+An `async def` function returns a coroutine; nothing happens until it is
+awaited. `await` means "pause here until this finishes, run something else in
+the meantime". That single line is the whole model.
+
+<Callout kind="note" title="Never call asyncio.run twice">
+  Each call creates an event loop, and a second loop inside a running one
+  raises `RuntimeError`. One `asyncio.run(main())` at the bottom of the program
+  is the pattern. In a web framework the framework owns the loop for you.
+</Callout>
+
+## gather runs them together
+
+```python
+results = await asyncio.gather(fetch_one("a"), fetch_one("b"), fetch_one("c"))
+```
+
+`gather` schedules the coroutines and waits for all of them. Run the same three
+with plain `await` in sequence and you have written a serial program that
+happens to look concurrent. `gather` returns results in submission order, so
+one slow request does not reorder the output.
+
+For fire-and-forget, `asyncio.create_task(coro)` starts work now and returns a
+handle you can await later.
+
+## Blocking code blocks everything
+
+```python
+async def main():
+    data = requests.get(url).text()   # blocks the entire loop
+    result = await fetch(url)         # does not
+```
+
+In a single-threaded loop there is nowhere for other work to go while a
+blocking call runs. Use an async client, or push the blocking call into
+`asyncio.to_thread`:
+
+```python
+rows = await asyncio.to_thread(read_csv, path)
+```
+
+<Callout kind="watch" title="asyncio is not faster, it is more patient">
+  Ten HTTP requests that each take 200ms take 200ms in parallel and 2 seconds
+  in sequence. Ten CPU calculations take exactly as long either way. If your
+  work is not waiting, `asyncio` adds overhead and takes it away.
+</Callout>
+
+<Callout kind="try" title="Feel the difference">
+  Fetch three URLs with `await` in a loop, then with `gather`, and time both.
+  Then do the same with `asyncio.sleep(1)` three times instead of real requests.
+  The second pair isolates the effect cleanly.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `async def` creates a coroutine, `await` suspends it, and `asyncio.gather`
+  runs many concurrently on one thread. Never block the loop: use async clients
+  or `asyncio.to_thread`. One `asyncio.run` per program.
+</Callout>

@@ -1,0 +1,45 @@
+---
+title: "First and Last Word"
+track: foundations
+order: 2
+summary: "Extract the first and last words of a sentence, tolerating messy spacing."
+xp: 25
+difficulty: easy
+functionName: "first_word"
+sources:
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+  - title: "Google's Python Class — Strings, Lists, and Dictionaries"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/strings_lists_dictionaries.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+---
+
+## The task
+
+Write `first_word(sentence)` returning the first word of the sentence.
+
+```python
+first_word("  learn python every day  ")  # "learn"
+```
+
+## Rules
+
+- Ignore leading and trailing whitespace and repeated internal spaces.
+- An empty or whitespace-only sentence returns an empty string.
+- Words are separated by whitespace, not by commas.
+
+## Do it in one line
+
+`str.split()` with no argument already does the cleaning for you, and a list of
+words is one index away from the answer.
+
+<Callout kind="try" title="Then write last_word">
+  The companion function is `sentence.split()[-1]`, but that raises
+  `IndexError` on an empty list. Decide how you want an empty sentence handled
+  and write the branch that makes it safe.
+</Callout>

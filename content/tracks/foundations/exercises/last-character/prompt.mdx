@@ -1,0 +1,42 @@
+---
+title: "Last Character"
+track: foundations
+order: 9
+summary: "Return the last character of a string, and an empty string when there is none."
+xp: 25
+difficulty: easy
+functionName: "last_character"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "The Python Tutorial — 3.1.2. Text"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The task
+
+Write `last_character(text)` returning the final character, or `""` when the
+string is empty.
+
+```python
+last_character("python")  # "n"
+last_character("")        # ""
+```
+
+## Rules
+
+- Return the character, not its position.
+- Do not strip whitespace: `last_character("hello ")` is a space.
+- A one-character string returns itself.
+
+## The trap
+
+`text[-1]` is the answer for every non-empty string and raises `IndexError` for
+the empty one. Guard the case, and do not reach for a try/except when an `if`
+is clearer.

@@ -1,0 +1,54 @@
+---
+title: "Sum of Digits"
+track: foundations
+order: 15
+summary: "Add up the digits of a non-negative integer using arithmetic only."
+xp: 25
+difficulty: medium
+functionName: "digit_sum"
+sources:
+  - title: "Python for Everybody — Chapter 5"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+  - title: "Exercism Python Track — concept: numbers"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## The task
+
+Write `digit_sum(number)` that returns the sum of the digits of a non-negative
+integer.
+
+```python
+digit_sum(1234)  # 10
+digit_sum(0)     # 0
+```
+
+## Rules
+
+- No `str()`, no `sum()` over characters, no `math` tricks. Arithmetic only.
+- The input is non-negative.
+- Zero is a valid input and its digit sum is zero.
+
+## The operator
+
+`number % 10` gives the last digit. `number // 10` removes it. A loop over
+those two operations solves the problem without ever turning the number into
+text.
+
+<Callout kind="try" title="Work one step by hand">
+  ```python
+  number = 1234
+
+  print(number % 10)
+  print(number // 10)
+  ```
+
+  Run it. Those two lines are the entire algorithm, repeated until the number
+  is gone.
+</Callout>

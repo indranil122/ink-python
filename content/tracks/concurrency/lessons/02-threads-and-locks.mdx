@@ -1,0 +1,108 @@
+---
+title: "Threads and Locks"
+track: concurrency
+order: 2
+summary: "The simplest concurrency tool: run several callables in the same process, share state carefully, and know when the GIL makes it pointless."
+xp: 10
+tags: [concurrency, threading]
+objectives:
+  - Start and join a thread
+  - Protect shared state with a lock
+  - Recognise when threads are the wrong tool
+sources:
+  - title: "The Python Tutorial — 17. Multithreading"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/threading.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/threading.html"
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Start work and wait for it
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+
+with ThreadPoolExecutor(max_workers=8) as pool:
+    results = list(pool.map(fetch, urls))
+```
+
+`ThreadPoolExecutor` is the modern interface: a fixed number of worker threads,
+a queue of tasks, and results returned in order. It shuts down cleanly when the
+block ends, which the raw API does not do for you.
+
+## The old API still exists
+
+```python
+import threading
+
+worker = threading.Thread(target=fetch, args=(url,))
+worker.start()
+worker.join()
+```
+
+`start` returns immediately; `join` blocks until the thread finishes. A thread
+that is never joined may still be running when the program exits, which is how
+data loss happens.
+
+## Shared state is the danger
+
+```python
+counter = 0
+
+def increment():
+    global counter
+    counter += 1
+```
+
+Run that in eight threads and the result is usually less than 800,000. The
+increment is read, add, write — and another thread can interleave between the
+read and the write.
+
+```python
+lock = threading.Lock()
+
+def increment():
+    global counter
+    with lock:
+        counter += 1
+```
+
+<Callout kind="watch" title="Prefer queues">
+  Sharing a mutable object under a lock is correct and easy to get subtly wrong.
+  Better: give each thread its own data and send results through a queue.
+
+  ```python
+  from queue import Queue
+
+  results = Queue()
+  threading.Thread(target=worker, args=(results,)).start()
+  results.get()
+  ```
+
+  No shared mutable state means no lock, and no deadlock.
+</Callout>
+
+## When threads are pointless
+
+The GIL means two threads never run Python bytecode at the same time, so
+CPU-bound work gains nothing and pays for the context switching. Threads are for
+waiting: network, disk, and any library that releases the GIL while it works,
+which includes most I/O in C.
+
+<Callout kind="try" title="See the race">
+  Run the unlocked counter from four threads, print the result, then add the
+  lock. On a multi-core machine the first number will usually be short of
+  400,000 and the second will not. That is a real bug class, visible in ten
+  lines.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `ThreadPoolExecutor` is the interface to use; `Thread` with `start` and `join`
+  is the primitive underneath. Lock shared mutable state, or avoid sharing it
+  with queues entirely. Threads help with waiting and not with calculating.
+</Callout>

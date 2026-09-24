@@ -1,0 +1,124 @@
+---
+title: "Comprehensions"
+track: data-structures
+order: 7
+summary: "A comprehension builds a list, set, dictionary or generator in one readable line. Learn the syntax, the two clauses, the condition, and when a loop is clearer."
+xp: 10
+tags: [data-structures, comprehensions]
+objectives:
+  - Write list, set, dictionary and generator comprehensions
+  - Use the if clause as a filter and as a conditional expression
+  - Know when a loop is the better choice
+sources:
+  - title: "The Python Tutorial — 6.2.9. List Comprehensions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+  - title: "Exercism Python Track — concept: comprehensions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## The pattern
+
+A loop that builds a new sequence from an existing one, written as a single
+expression.
+
+```python
+squares = []
+for number in range(6):
+    squares.append(number ** 2)
+```
+
+becomes
+
+```python
+squares = [number ** 2 for number in range(6)]
+```
+
+Same result, one line, and the transformation is visible instead of buried in
+a loop body.
+
+## The four kinds
+
+```python
+numbers = [1, 2, 3, 4]
+
+[n * 2 for n in numbers]                  # list
+{n % 2 for n in numbers}                  # set
+{n: n ** 2 for n in numbers}              # dictionary
+(n for n in numbers)                      # generator
+```
+
+The generator version is written with round brackets and produces values one at
+a time. That makes it the right choice for large data, because nothing is
+stored.
+
+## The if clause filters
+
+```python
+even = [n for n in range(10) if n % 2 == 0]
+```
+
+The clause comes after the loop and applies to the value, not the source. That
+ordering matters: the expression is only evaluated for items that pass the
+filter.
+
+## The conditional expression is different
+
+```python
+labels = ["even" if n % 2 == 0 else "odd" for n in range(6)]
+```
+
+Here the `if` is *inside* the output expression and chooses between two values.
+Confusing the two forms is the most common comprehension mistake, so check the
+position of the `if` before you write one.
+
+## Nested loops and flattening
+
+```python
+pairs = [(row, col) for row in "ab" for col in (1, 2)]
+flat = [n for row in [[1, 2], [3, 4]] for n in row]
+```
+
+Two `for` clauses read inside-out, and they are the standard way to flatten one
+level of nesting.
+
+## Comprehensions build, loops compute
+
+A comprehension is a *builder*: it creates a new sequence. If your code needs a
+running total, a lookup table or a decision, write the loop. Forcing those into
+a comprehension produces the famously unreadable `sum(1 for _ in range(10**9))`
+that you have seen in code review.
+
+<Callout kind="try" title="Write both ways">
+  ```python
+  words = ["apple", "fig", "banana"]
+  ```
+
+  Build the lengths with a loop, then with a comprehension. Then build the
+  lengths of only the fruits with more than three letters, both ways. Compare
+  the two versions and decide which you would rather read.
+</Callout>
+
+<Callout kind="watch" title="Walrus and scoping">
+  You will meet `[n for n in data if (n := n * 2) > 10]` in code that tries to
+  compute and filter in one pass. The walrus operator binds a name inside the
+  comprehension, and that name leaks into the enclosing scope. It is legal and
+  occasionally useful, and almost always clearer as two steps.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Comprehensions build a new sequence from an old one in a single expression.
+  An `if` after the loop filters; an `if` inside the expression chooses a
+  value. Use generators when the data is large or infinite. Use a plain loop
+  when you are accumulating, looking things up or branching.
+</Callout>

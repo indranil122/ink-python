@@ -1,0 +1,107 @@
+---
+title: "Choosing the Right Structure"
+track: data-structures
+order: 9
+summary: "A decision guide for picking between list, tuple, set and dictionary, with the performance and readability costs of each choice."
+xp: 10
+tags: [data-structures, design]
+objectives:
+  - Pick a structure from the question you need to ask
+  - Know the rough cost of each operation
+  - Recognise when a structure is doing two jobs badly
+sources:
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "The Python Tutorial — 5. Data Structures"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## Start from the question
+
+Do not start from the structure. Start from the operations you need, because
+every structure is fast at some things and slow at others.
+
+| You need to | Use |
+| --- | --- |
+| Keep an ordered collection, add and remove often | `list` |
+| Keep a fixed record that must not change | `tuple` |
+| Ask "have I seen this?" or remove duplicates | `set` |
+| Look values up by a key | `dict` |
+| Count things by key | `dict` of counts |
+| Group things by key | `dict` of lists |
+
+## The costs, roughly
+
+| Operation | `list` | `tuple` | `set` | `dict` |
+| --- | --- | --- | --- | --- |
+| Get by index | fast | fast | not possible | not possible |
+| Look up by key | slow | not possible | fast | fast |
+| Membership test | slow | slow | fast | fast |
+| Keep duplicates | yes | yes | no | values may repeat |
+| Ordered | yes | yes | no | insertion order |
+| Hashable | no | yes | yes | no |
+
+"Fast" means roughly constant time; "slow" means proportional to the size.
+The practical consequence: a membership test in a list of a million items is a
+million comparisons, and in a set it is one.
+
+<Callout kind="note" title="Complexity without the algebra">
+  You do not need Big-O notation to use this table. You only need the habit of
+  asking "how big can this get?" A membership test on user input is fine with a
+  list of ten. The same test inside a loop over a million rows is not.
+</Callout>
+
+## When a list is doing two jobs
+
+```python
+seen = []
+for item in items:
+    if item not in seen:
+        seen.append(item)
+```
+
+This is a set pretending to be a list, and it runs in quadratic time. A set says
+what it means:
+
+```python
+seen = set()
+for item in items:
+    seen.add(item)
+```
+
+The reverse mistake is just as common: using a dictionary as if order did not
+matter when a list would have been clearer.
+
+## Choose for the reader
+
+The fastest structure is not always the best one. For five items, a list is
+faster to read than a set, and nobody will ever notice. Reach for the clever
+structure when the data is large or the operation is in a hot loop — and write
+the obvious one everywhere else.
+
+<Callout kind="try" title="Pick a structure">
+  For each problem, name the structure and justify it in one sentence:
+  1. The order in which students finished a race, with duplicates kept.
+  2. Which user IDs have already been processed, out of ten million.
+  3. A user's display name, looked up once per request.
+  4. A fixed point `(x, y)` used as a cache key.
+  5. How many times each word appears in a novel.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Choose from the operations: order and edits suggest a list, uniqueness and
+  membership suggest a set, lookup by key suggests a dictionary, and immutability
+  suggests a tuple. Lists are linear for membership; sets and dictionaries are
+  not. Prefer the readable choice until size or a hot loop says otherwise.
+</Callout>

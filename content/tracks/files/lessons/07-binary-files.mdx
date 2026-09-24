@@ -1,0 +1,90 @@
+---
+title: "Binary Files"
+track: files
+order: 7
+summary: "Reading and writing bytes, struct for fixed layouts, and why pickle is dangerous on untrusted input."
+xp: 10
+tags: [files, binary]
+objectives:
+  - Read and write bytes
+  - Use struct for binary formats
+  - Explain why pickle is unsafe
+sources:
+  - title: "The Python Tutorial — 7.2. Binary Data"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/struct.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "SciPy Lecture Notes — 3.2. Python and file I/O"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/file_io.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Bytes are immutable sequences of integers
+
+```python
+with open("logo.png", "rb") as handle:
+    header = handle.read(8)
+
+print(header[:4], len(header))
+```
+
+In `rb` mode, `read` returns `bytes` and `write` needs `bytes`. There is no
+encoding, no newline translation and no text involved.
+
+```python
+data = bytearray(b"\x00\x00")
+data[0] = 255
+payload = bytes(data)
+```
+
+`bytes` is immutable; `bytearray` is editable. Convert before writing.
+
+## Fixed layouts with struct
+
+```python
+import struct
+
+record = struct.pack(">I4sH", 1, b"abcd", 513)
+print(struct.unpack(">I4sH", record))
+```
+
+The format string is read left to right: `>` is big-endian, `I` a 4-byte
+unsigned int, `4s` four bytes, `H` a 2-byte unsigned short. `>` and `<` exist
+because binary formats are defined byte by byte, and a mismatch produces data
+that is subtly wrong rather than an error.
+
+```python
+values = struct.pack(f">{count}I", *numbers)
+```
+
+<Callout kind="watch" title="Never unpickle untrusted data">
+  `pickle.loads` executes arbitrary code while reconstructing an object. A
+  pickle is a program, not a data file. Use JSON, or a format with no code
+  execution, for anything that came from a user, a download or another
+  service.
+</Callout>
+
+## Where bytes really show up
+
+- Image and audio headers
+- Network packets
+- Serialised numeric arrays, which NumPy can read directly
+- Files produced by C and Rust libraries
+
+For numbers, `array` and `numpy.frombuffer` are faster than unpacking bytes one
+at a time, and `struct` is right for a small, fixed, documented layout.
+
+<Callout kind="try" title="Read a real header">
+  Open a PNG or JPEG from the web, read sixteen bytes, and print them in hex.
+  The first bytes are a fixed signature, which is exactly the kind of check
+  `struct` or a byte comparison is for.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `rb` and `wb` work in bytes, with no encoding. `struct` reads and writes
+  fixed binary layouts, and byte order matters. Never `pickle.loads` data you
+  did not create.
+</Callout>

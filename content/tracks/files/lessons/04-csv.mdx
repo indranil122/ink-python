@@ -1,0 +1,96 @@
+---
+title: "CSV Files"
+track: files
+order: 4
+summary: "Reading and writing comma-separated values with the csv module, which handles quoting, embedded separators and newlines for you."
+xp: 10
+tags: [files, csv]
+objectives:
+  - Read a CSV into dictionaries
+  - Write a CSV correctly, including quoting
+  - Understand why splitting on commas by hand is wrong
+sources:
+  - title: "The Python Tutorial — 7.2.1. Writing CSV Files"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/csv.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "SciPy Lecture Notes — 3.2. Python and file I/O"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/file_io.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Why not split
+
+```python
+line.split(",")
+```
+
+breaks on `"Smith, Ada",42`, because the separator appears inside a quoted
+field. It also mishandles embedded newlines. The `csv` module knows the rules
+and is in the standard library.
+
+## Reading into dictionaries
+
+```python
+import csv
+
+with open("people.csv", newline="", encoding="utf-8") as handle:
+    reader = csv.DictReader(handle)
+    for row in reader:
+        print(row["name"], int(row["age"]) + 1)
+```
+
+`DictReader` uses the first line as headers. Every row is a dictionary, so
+`row["name"]` survives a column being reordered — which `reader[1]` does not.
+
+`newline=""` is required. It hands the parsing to the `csv` module instead of
+letting Python translate line endings first, which is how you get stray blank
+lines.
+
+## Writing
+
+```python
+import csv
+
+with open("people.csv", "w", newline="", encoding="utf-8") as handle:
+    writer = csv.DictWriter(handle, fieldnames=["name", "age"])
+    writer.writeheader()
+    writer.writerow({"name": "Ada", "age": 36})
+```
+
+The writer quotes automatically when a value contains a comma, a quote or a
+newline. That is the behaviour you get for free and cannot easily reproduce by
+hand.
+
+<Callout kind="watch" title="Dictionaries need all the keys">
+  `DictWriter` raises `ValueError: dict contains fields not in fieldnames` if a
+  row has extra keys, and writes blanks for missing ones. When your data is
+  irregular, normalise the row into exactly `fieldnames` before writing, or the
+  output quietly loses columns.
+</Callout>
+
+## Dialects and types
+
+```python
+reader = csv.reader(handle, delimiter=";", quoting=csv.QUOTE_NONE)
+```
+
+Semicolon-separated exports and European decimal commas are common.
+`csv.Sniffer` can guess a dialect from a sample. Every field still arrives as a
+string, so convert explicitly — `int(row["age"])` and `float(row["price"])` —
+and decide what an empty field means.
+
+<Callout kind="try" title="Prove the quoting rule">
+  Write a row whose name contains a comma, a quote and a newline. Open the file
+  again with `DictReader` and confirm you get back exactly the value you wrote.
+  Then do the same with `split(",")` and watch it fail.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Use `csv.DictReader` and `csv.DictWriter` with `newline=""` and an explicit
+  encoding. Do not split on commas by hand. Read every field as text and convert
+  deliberately, and pass `fieldnames` so the header is written even with no rows.
+</Callout>

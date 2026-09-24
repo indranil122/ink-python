@@ -1,0 +1,98 @@
+---
+title: "Task Groups, Timeouts and Cancellation"
+track: concurrency
+order: 6
+summary: "Structure concurrent work so that one failure does not leave the others running, and that nothing waits forever."
+xp: 10
+tags: [concurrency, asyncio]
+objectives:
+  - Group tasks so failures cancel the rest
+  - Apply timeouts and retry with backoff
+  - Handle CancelledError correctly
+sources:
+  - title: "The Python Tutorial — 9.8. Coroutines"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/asyncio-task.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/asyncio-task.html"
+---
+
+## gather cancels nothing
+
+```python
+results = await asyncio.gather(fetch(a), fetch(b), fetch(c), return_exceptions=True)
+```
+
+With `return_exceptions=True`, one failure is returned as a result and the
+others keep running. Without it, `gather` raises immediately while the
+remaining tasks are still in flight — and will log "task was destroyed but it is
+pending" as they go.
+
+A task group fixes both:
+
+```python
+async with asyncio.TaskGroup() as group:
+    group.create_task(send(order))
+    group.create_task(charge(order))
+```
+
+If any task raises, the group cancels the rest, waits for them, and then raises
+a `ExceptionGroup` containing every failure. Nothing is left running behind your
+back.
+
+<Callout kind="note" title="Prefer task groups">
+  `TaskGroup` is the modern answer and it handles the messy cases for you.
+  Reach for `gather` only for homogeneous work where you want results in order
+  and a single failure to be genuinely fatal.
+</Callout>
+
+## Timeouts
+
+```python
+try:
+    result = await asyncio.wait_for(fetch(url), timeout=5)
+except TimeoutError:
+    logger.warning("timed out: %s", url)
+```
+
+`asyncio.timeout` does the same as a context manager, and handles the awkward
+case where a cancelled operation swallows the cancellation.
+
+## Retry with backoff
+
+```python
+async def fetch_with_retry(url, attempts=3):
+    for attempt in range(attempts):
+        try:
+            return await fetch(url)
+        except TransientError:
+            if attempt == attempts - 1:
+                raise
+            await asyncio.sleep(2 ** attempt)
+```
+
+Waiting one, two, four seconds. Retrying instantly is how a struggling service
+gets knocked over, and the exponential growth is what gives it room to recover.
+
+## Cancellation is normal
+
+```python
+async def worker(queue):
+    while True:
+        job = queue.get_nowait()
+        try:
+            await handle(job)
+        except asyncio.CancelledError:
+            queue.task_done()
+            raise
+```
+
+`CancelledError` inherits from `BaseException`, so `except Exception` does not
+catch it — which is deliberate. If you must clean up, catch it explicitly and
+re-raise, or the shutdown will not actually stop.
+
+<Callout kind="recap" title="Recap">
+  `asyncio.TaskGroup` cancels siblings when one task fails, so nothing is left
+  running. `wait_for` bounds every operation, retries need exponential backoff,
+  and `CancelledError` must be re-raised after cleanup.
+</Callout>

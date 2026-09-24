@@ -1,0 +1,113 @@
+---
+title: "Docstrings"
+track: functions
+order: 4
+summary: "A docstring is documentation that lives with the code, is written in ordinary English, and is read by help() and every editor."
+xp: 10
+tags: [functions, documentation]
+objectives:
+  - Write a docstring that states what a function does, not how
+  - Read a docstring with help()
+  - Use the reStructuredText sections your tools understand
+sources:
+  - title: "The Python Tutorial — 6.2. Function Definitions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "PEP 257 — Docstring Conventions"
+    author: "Python Enhancement Proposals"
+    url: "https://peps.python.org/pep-0257/"
+    license: "Public domain"
+    licenseUrl: "https://peps.python.org/pep-0257/"
+---
+
+## A string, in the right place
+
+```python
+def greet(name):
+    """Return a greeting for name."""
+    return f"Hello, {name}!"
+```
+
+The string is the first statement in the function body. Nothing else changes;
+it is simply a string literal that Python stores on the function.
+
+```python
+help(greet)
+```
+
+prints it, along with the signature. Every editor can show the same thing on
+hover.
+
+## Say what it returns, not how it works
+
+```python
+def to_fahrenheit(celsius):
+    """Return the Fahrenheit equivalent of a temperature in Celsius."""
+    return celsius * 9 / 5 + 32
+```
+
+The body already says *how*. The docstring is for the person deciding whether to
+call it, and for the person maintaining it six months from now.
+
+<Callout kind="watch" title="A docstring that restates the code">
+  ```python
+  def add(left, right):
+      """Add left and right together and return the result."""
+  ```
+
+  This helps nobody. It duplicates the signature, goes stale the moment the
+  parameter is renamed, and says nothing about types, failures or edge cases.
+</Callout>
+
+## The sections worth writing
+
+```python
+def load(path, encoding="utf-8"):
+    """Read a text file and return its lines.
+
+    Args:
+        path: Path to the file to read.
+        encoding: Text encoding to decode with.
+
+    Returns:
+        A list of lines, without line endings.
+
+    Raises:
+        FileNotFoundError: If the path does not exist.
+    """
+    ...
+```
+
+Args, Returns and Raises are the three that change how a function is used. Write
+them when they are not obvious, not always.
+
+## Module and class docstrings
+
+The same idea applies one level up. A module docstring is the first thing in the
+file, before any import:
+
+```python
+"""Parse ledger files into structured entries."""
+```
+
+## Style, briefly
+
+- One line, ending in a period, in the imperative: "Return", not "Returns".
+- Use triple double quotes even for one line.
+- Keep the summary under about 80 characters.
+- Indent continuation lines so the text reads as a sentence.
+
+<Callout kind="try" title="Read it the hard way">
+  Write a function with no docstring, then one with a good one. Now imagine
+  calling each from a new file. Which one tells you what happens when the input
+  is empty? A docstring is the cheapest documentation in programming, because it
+  cannot drift away from the code it describes.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  A docstring is the first string literal in a function, module or class, and
+  `help()` prints it. Describe what the function returns, when it raises, and
+  what its arguments mean. Do not narrate the body.
+</Callout>

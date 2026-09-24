@@ -1,0 +1,119 @@
+---
+title: "Project: Sales Report"
+track: data
+order: 8
+summary: "One end-to-end analysis: load, clean, aggregate, join and plot, with every assumption written down."
+xp: 10
+tags: [data, project]
+objectives:
+  - Run a complete analysis pipeline
+  - Keep the cleaning steps explicit and reviewable
+  - Produce one chart that answers one question
+sources:
+  - title: "SciPy Lecture Notes — 3.1. Introduction to pandas"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/pandas.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "The Python Tutorial — 3. An Informal Introduction to Python"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/inputoutput.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The question first
+
+"Which regions are growing, and by how much?" Every step below exists to answer
+that. A project without a question becomes a pile of charts nobody reads.
+
+## Load
+
+```python
+import pandas as pd
+
+orders = pd.read_csv(
+    "orders.csv",
+    parse_dates=["order_date"],
+    dtype={"order_id": "string", "region": "string"},
+)
+regions = pd.read_csv("regions.csv")   # region -> country, segment
+print(orders.shape, regions.shape)
+```
+
+## Clean
+
+```python
+before = len(orders)
+
+orders = orders.drop_duplicates()
+orders = orders.dropna(subset=["order_date", "total", "region"])
+orders = orders[orders["total"] > 0]
+orders["region"] = orders["region"].str.strip().str.title()
+
+print(f"dropped {before - len(orders)} rows")
+```
+
+The printed count belongs in the output. Anyone reading the report can see how
+many rows did not survive, which is the difference between a finding and a
+guess.
+
+## Join
+
+```python
+data = orders.merge(regions, on="region", how="left", validate="m:1")
+print(data.shape, data["country"].isna().sum())
+```
+
+`validate="m:1"` makes a bad join fail loudly instead of multiplying rows.
+
+## Aggregate
+
+```python
+monthly = (
+    data.set_index("order_date")
+        .sort_index()[["total"]]
+        .resample("ME")
+        .sum()
+)
+
+year_over_year = monthly["total"].pct_change(12).mul(100).round(1)
+summary = pd.DataFrame({
+    "revenue": monthly["total"].round(2),
+    "yoy_pct": year_over_year,
+}).dropna()
+
+print(summary.tail())
+```
+
+## Plot one thing
+
+```python
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.plot(monthly.index, monthly["total"], label="Revenue")
+ax.set_title("Monthly revenue")
+ax.set_ylabel("Revenue (GBP)")
+ax.legend()
+fig.savefig("revenue.png", dpi=150, bbox_inches="tight")
+```
+
+<Callout kind="note" title="Say what you would do differently">
+  Finish with three sentences: what the data cannot tell you, which cleaning
+  decision you are least sure about, and what you would ask for next time.
+  That paragraph is the difference between an analyst and someone who ran some
+  code.
+</Callout>
+
+<Callout kind="try" title="Ship it as a script">
+  Put the whole thing in `report.py` with a `main()`, a `--csv` argument and a
+  `--out` directory, then run it against a second data set. The first run finds
+  every assumption you made implicitly.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Start from a question, load with explicit types and dates, clean with printed
+  counts, join with `validate`, aggregate with `resample`, and plot one thing
+  with labelled axes. Write down what the data cannot answer.
+</Callout>

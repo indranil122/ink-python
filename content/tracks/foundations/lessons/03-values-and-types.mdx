@@ -1,0 +1,149 @@
+---
+title: "Values and Types"
+track: foundations
+order: 3
+summary: "Every value in Python has a type. Learn the built-in types you will use daily, how to ask Python what something is, and why the answer to that question is more useful than guessing."
+xp: 10
+tags: [basics, types]
+objectives:
+  - "Name the built-in types: int, float, str, bool, and NoneType"
+  - Inspect a value's type with type()
+  - Convert safely between types and recognise when conversion is wrong
+sources:
+  - title: "The Python Tutorial — 3.1. Using Python as a Calculator, 3.2. First Steps Towards Programming"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Python for Everybody — Chapter 1"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+  - title: "Exercism Python Track — concept: functions and variables"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## Five types cover most beginner code
+
+You do not need to memorise a table of types. You need five of them.
+
+| Type | What it holds | Literal example |
+| --- | --- | --- |
+| `int` | Whole numbers, arbitrary size | `42` |
+| `float` | Numbers with a fractional part | `3.14` |
+| `str` | Text of any length | `"hello"` |
+| `bool` | Exactly two values, `True` or `False` | `True` |
+| `NoneType` | The single value `None`, meaning *nothing yet* | `None` |
+
+A **literal** is the source text that produces a value. `42` is a literal. The
+act of turning source text into a value is called evaluation, and it is not a
+metaphor: the text is converted to a real object in memory.
+
+```python
+print(type(42))
+print(type(3.14))
+print(type("hello"))
+print(type(True))
+print(type(None))
+```
+
+Each line prints one type name. That is all `type` does, and it is the single
+most useful debugging tool you have.
+
+## Quotation marks make text
+
+Single and double quotes are equivalent, as long as you do not mix them
+carelessly.
+
+```python
+print("It's fine")
+print('It says "hello"')
+```
+
+Python 3 also has triple-quoted strings for text that spans lines, which you
+will use for docstrings in Track 3.
+
+```python
+note = """First line.
+Second line."""
+print(note)
+```
+
+## Integers are not limited
+
+Unlike most languages, Python integers do not overflow at some fixed ceiling.
+You can add to a number forever and it will keep working, limited only by
+memory.
+
+```python
+big = 2**100
+print(big)
+print(big + 1)
+```
+
+The first prints a 31-digit number, the second a slightly larger one. The
+`2**100` syntax is exponentiation: `**` is power, `*` is multiplication.
+
+<Callout kind="try" title="Type surprises worth finding early">
+  Run each of these and read the output carefully:
+
+  ```python
+  print(7 / 2)
+  print(7 // 2)
+  print(7 % 2)
+  print(2 ** 10)
+  ```
+
+  `7 / 2` is `3.5`, not `3`. Division always produces a float. The double
+  slash `//` is *floor* division, and `%` is the remainder. Python versions
+  before 3 behaved differently here, which is why old tutorials sometimes
+  surprise you.
+</Callout>
+
+## Converting between types
+
+Conversion is a function call, and it either works or raises an error.
+
+```python
+print(int("42") + 1)
+print(float("3.5") * 2)
+print(str(99) + " bottles")
+print(int("not a number"))
+```
+
+The last line raises `ValueError`, and the message tells you exactly what it
+could not convert. Silent conversion is the dangerous kind: `int("42 apples")`
+fails loudly, but `int(3.9)` quietly becomes `3`, losing the fraction forever.
+
+<Callout kind="watch" title="One trap with booleans">
+  In arithmetic, Python treats `True` as `1` and `False` as `0`. That is a
+  convenience, not an invitation. Prefer writing `if items:` over
+  `if items == True:`.
+</Callout>
+
+## Type is a question, not a promise
+
+Variables have no declared type in Python, but every **value** has one, and
+that is what Python acts on.
+
+```python
+value = 10
+print(type(value))
+value = "10"
+print(type(value))
+```
+
+The same name now holds a different kind of object. Python never stops you,
+which is why type errors in Python are usually about *what a value can do*
+rather than about a declaration you forgot to write.
+
+<Callout kind="recap" title="Recap">
+  Five types carry beginner programs: `int`, `float`, `str`, `bool`, and `None`.
+  Use `type()` instead of guessing. Quotations make text; integers are
+  unlimited; `/` always returns a float. Convert with `int()`, `float()`, and
+  `str()`, and check the failure message when a conversion looks wrong.
+</Callout>

@@ -1,0 +1,10 @@
+# Default owner for repository changes.
+* @indranil122
+
+# Content and legal files need maintainer review.
+/content/ @indranil122
+/LICENSE @indranil122
+/CONTENT-LICENSE.md @indranil122
+/THIRD_PARTY_NOTICES.md @indranil122
+/PRIVACY_POLICY.md @indranil122
+/TERMS.md @indranil122

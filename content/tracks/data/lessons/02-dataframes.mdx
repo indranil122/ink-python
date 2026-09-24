@@ -1,0 +1,98 @@
+---
+title: "DataFrames"
+track: data
+order: 2
+summary: "The table abstraction that most data work is built on: creating a DataFrame, selecting columns and rows, and the index underneath it."
+xp: 10
+tags: [data, pandas]
+objectives:
+  - Build a DataFrame from a dict or records
+  - Select columns, rows and cells
+  - Understand the index as the thing to watch
+sources:
+  - title: "SciPy Lecture Notes — 3.1. Introduction to pandas"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/pandas.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "Pandas User Guide"
+    author: "The pandas Development Team"
+    url: "https://pandas.pydata.org/docs/user_guide/indexing.html"
+    license: "BSD-3-Clause"
+    licenseUrl: "https://pandas.pydata.org/"
+---
+
+## A table with labels
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    "name": ["ada", "alan", "grace"],
+    "age": [36, 41, 45],
+    "score": [100.0, 91.5, 98.0],
+})
+
+print(df.shape)   # (3, 3)
+print(df.dtypes)
+```
+
+Each column is a Series with one dtype; each row is indexed by default with
+0, 1, 2.
+
+## Selecting
+
+```python
+df["name"]                    # one column, a Series
+df[["name", "score"]]         # two columns, a DataFrame
+df.loc[0, "name"]             # one cell, by label
+df.iloc[0, 0]                 # one cell, by position
+df[df["age"] > 38]            # rows matching a condition
+```
+
+`.loc` is by label, `.iloc` is by position. Confusing them is the most common
+pandas error, and the fix is to decide which one you mean before you type.
+
+<Callout kind="watch" title="Chained assignment does not work">
+  ```python
+  df[df["age"] > 38]["score"] = 0     # SettingWithCopyWarning, may do nothing
+  df.loc[df["age"] > 38, "score"] = 0  # correct
+  ```
+
+  Filtering produces a copy that pandas cannot guarantee is a view. Always
+  assign through `.loc` in one step.
+</Callout>
+
+## The index
+
+```python
+df = df.set_index("name")
+print(df.loc["ada"])
+```
+
+The index is the row label. It is used by `loc`, it survives sorting and joining,
+and if it has duplicates, `loc` returns several rows rather than raising — which
+is a bug you may not notice.
+
+## Summarising
+
+```python
+print(df.describe())
+print(df["score"].mean())
+print(df.groupby("age").size())
+```
+
+`describe` gives count, mean, standard deviation, min, quartiles and max, which
+is the first thing to look at with any new data set.
+
+<Callout kind="try" title="Compare loc and iloc">
+  Sort a DataFrame by a column, then compare `df.loc[0]` with `df.iloc[0]`.
+  After sorting, the label 0 and the position 0 are usually different rows.
+  That difference is the whole reason both accessors exist.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `pd.DataFrame` is labelled columns of typed Series with a row index. Use
+  `.loc` for labels and `.iloc` for positions, assign through `.loc` in one
+  step, and check `describe()` before you trust any column.
+</Callout>

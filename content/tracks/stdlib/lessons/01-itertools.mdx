@@ -1,0 +1,93 @@
+---
+title: "itertools"
+track: stdlib
+order: 1
+summary: "C-fast iterators for the loops you write anyway: counting, repeating, grouping, slicing and zipping without materialising a list."
+xp: 10
+tags: [stdlib, iteration]
+objectives:
+  - Replace manual index loops with itertools
+  - Use groupby, accumulate and islice
+  - Know the laziness rules
+sources:
+  - title: "The Python Tutorial — 10.6.1. Iterators"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/itertools.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## Infinite, and therefore lazy
+
+```python
+from itertools import count, cycle, repeat, islice
+
+print(list(islice(count(10, 2), 5)))
+print(list(islice(cycle("ab"), 5)))
+print(list(islice(repeat("x", 3), 5)))
+```
+
+`count` never ends, which is only safe because `islice` stops it. Every function
+in this module returns an iterator, so nothing is computed until you consume it —
+and a comprehension consumes it immediately.
+
+## The ones that replace real code
+
+```python
+from itertools import groupby, accumulate, starmap, product
+
+for key, group in groupby(sorted(words)):
+    print(key, len(list(group)))
+
+list(accumulate([1, 2, 3, 4]))            # [1, 3, 6, 10]
+list(accumulate([1, 2, 3], max))         # [1, 2, 3]
+```
+
+`groupby` gives you **runs of consecutive** equal keys, which is why sorting
+first is not optional. `accumulate` with a function is a running total, a
+running maximum, or a running product in one call.
+
+## A practical set
+
+| Function | Does |
+| --- | --- |
+| `chain` / `chain.from_iterable` | Several iterables end to end |
+| `zip_longest` | Zip, padding the shorter one |
+| `combinations` / `permutations` / `product` | All subsets, orders, or cross products |
+| `islice` | A window onto a long iterator |
+| `takewhile` / `dropwhile` | Stop or start at a condition |
+| `starmap` | Apply a function to pre-zipped arguments |
+| `pairwise` | Overlapping pairs |
+
+```python
+from itertools import combinations
+
+teams = ["ada", "alan", "grace"]
+for pairing in combinations(teams, 2):
+    print(pairing)
+```
+
+<Callout kind="watch" title="Laziness has one sharp edge">
+  An iterator is consumed once. `list(groupby(...))` and then iterating the
+  result again gives you nothing. When you need to go round twice, call
+  `iter()` on the original sequence, or materialise with `list()` deliberately.
+</Callout>
+
+## When not to bother
+
+For a list of a few hundred items, a comprehension is usually clearer and fast
+enough. Reach for `itertools` when the data is large, unbounded, or the loop you
+would write is one of the shapes above.
+
+<Callout kind="try" title="Three rewrites">
+  Take a manual index loop, a nested loop building pairs, and a running-total
+  loop. Rewrite each with `enumerate`, `itertools.combinations` and
+  `accumulate`, then check the results match exactly.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `itertools` provides fast, lazy iterators. Use `islice` with the infinite
+  ones, `groupby` on sorted data, `accumulate` for running values, and
+  `combinations` and `product` instead of nested loops. Materialise with `list`
+  only when you really need to iterate twice.
+</Callout>

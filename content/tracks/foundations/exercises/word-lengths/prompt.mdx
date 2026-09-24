@@ -1,0 +1,45 @@
+---
+title: "Word Lengths"
+track: foundations
+order: 18
+summary: "Return the length of every word in a sentence as a list of integers."
+xp: 25
+difficulty: easy
+functionName: "word_lengths"
+sources:
+  - title: "Exercism Python Track — concept: lists"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The task
+
+Write `word_lengths(sentence)` returning a list with the length of each word.
+
+```python
+word_lengths("learn python")  # [5, 6]
+```
+
+## Rules
+
+- Ignore extra whitespace between words.
+- An empty sentence returns an empty list.
+- Punctuation counts as part of the word.
+
+## The comprehension
+
+Lesson 9 showed loops; this is the shape that replaces most of them:
+
+```python
+[word for word in sentence.split()]
+```
+
+Put the transformation inside and you are done in one line. Write the loop
+version first so you can compare the two.

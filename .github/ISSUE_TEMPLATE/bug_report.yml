@@ -1,0 +1,64 @@
+name: Bug report
+description: Report broken behaviour in the site, runtime or build.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. For security issues, use the Security tab instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: The exercise tests hang when...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps someone else can follow.
+      placeholder: |
+        1. Open...
+        2. Run...
+        3. See...
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      description: Link to the affected page, if applicable.
+      placeholder: https://ink-python.vercel.app/learn/...
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome / Edge
+        - Firefox
+        - Safari
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      placeholder: What should have happened instead?
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, console output or related details.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true

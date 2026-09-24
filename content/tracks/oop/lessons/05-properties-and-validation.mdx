@@ -1,0 +1,144 @@
+---
+title: "Properties and Validation"
+track: oop
+order: 5
+summary: "Properties let you validate and compute on attribute access without changing how callers write it, which is the point at which a plain attribute stops being enough."
+xp: 10
+tags: [oop, properties]
+objectives:
+  - Add validation without changing the calling syntax
+  - Choose between storing and computing an attribute
+  - Avoid the hidden cost of a property that does work
+sources:
+  - title: "The Python Tutorial — 9.6. Properties"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/classes.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: classes"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## Attributes start public and honest
+
+```python
+class Account:
+    def __init__(self, balance=0.0):
+        self.balance = balance
+```
+
+Simple, fast, and the caller can set `account.balance = -50`. That last part is
+usually the problem: an account with a negative balance is not a valid state,
+and nothing stops it.
+
+## A property adds a gate without changing the syntax
+
+```python
+class Account:
+    def __init__(self, balance=0.0):
+        self.balance = balance
+
+    @property
+    def balance(self):
+        return self._balance
+
+    @balance.setter
+    def balance(self, value):
+        if value < 0:
+            raise ValueError("balance cannot be negative")
+        self._balance = value
+```
+
+The caller still writes `account.balance`, and now every path into that
+attribute is checked, including `__init__`. The private `_balance` holds the
+data; the property is the only door.
+
+<Callout kind="note" title="Why this matters more than validation">
+  The value of a property is not the check. It is that the *interface* stays
+  `account.balance`. If the rule changes, or the value becomes computed, or you
+  decide to log access, no caller changes.
+</Callout>
+
+## Read-only properties
+
+Omit the setter and the attribute can only be read:
+
+```python
+class Rectangle:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    @property
+    def area(self):
+        return self.width * self.height
+```
+
+`area` is computed, never stored, and cannot drift out of date. This is the
+other half of the rule from lesson 2: store what you are given, derive the rest.
+
+## Setters that do more than assign
+
+```python
+class Temperature:
+    def __init__(self, celsius):
+        self.celsius = celsius
+
+    @property
+    def fahrenheit(self):
+        return self.celsius * 9 / 5 + 32
+
+    @fahrenheit.setter
+    def fahrenheit(self, value):
+        self.celsius = (value - 32) * 5 / 9
+```
+
+Two names for one stored value. This is convenient until two setters can be
+used together and disagree about which is canonical — at which point pick one
+stored value and make the other a computed property.
+
+<Callout kind="watch" title="Properties are not free">
+  A property is a method call behind `obj.attribute`. Millions of attribute
+  reads in a loop will feel it. If the property does real work — a database
+  query, a file read — the code will be slow in a way that is invisible at the
+  call site. Use a property for validation and cheap computation; use a method
+  for expensive work.
+</Callout>
+
+## Validating early
+
+```python
+class Rectangle:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    @property
+    def width(self):
+        return self._width
+
+    @width.setter
+    def width(self, value):
+        if value <= 0:
+            raise ValueError("width must be positive")
+        self._width = value
+```
+
+An object that cannot be constructed into an invalid state is worth more than
+one that checks later. Validate in the setter, and every future method can
+assume the invariant.
+
+<Callout kind="try" title="Gate the invariant">
+  Write a `Product` class with `name`, `price` and `stock`. Reject an empty name
+  and a negative price through properties. Add a `total_value` property that is
+  computed. Then prove the invariant by trying to break it three different ways.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  A property validates and computes while keeping `obj.attribute` syntax. Store
+  what is given, derive everything else, and reject invalid values in setters so
+  an object can never hold an impossible state. Keep property work cheap.
+</Callout>

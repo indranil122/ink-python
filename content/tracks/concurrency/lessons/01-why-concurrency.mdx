@@ -1,0 +1,87 @@
+---
+title: "Why Concurrency"
+track: concurrency
+order: 1
+summary: "Concurrency is about waiting, not speed. Learn which work is worth overlapping, and why CPU-bound code is a different problem."
+xp: 10
+tags: [concurrency]
+objectives:
+  - Distinguish IO-bound from CPU-bound work
+  - Say what concurrency does and does not speed up
+  - Choose a tool before choosing a library
+sources:
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "The Python Tutorial — 9.8. Coroutines"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/asyncio.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## Two kinds of waiting
+
+**IO-bound** work spends its time waiting: a network request, a database query,
+a file read. The CPU is idle.
+
+**CPU-bound** work spends its time calculating: compression, image processing,
+tight numeric loops. The CPU is busy.
+
+Concurrency helps with the first kind. While one request waits, the program can
+work on another. It does nothing for the second, because there is only one core
+and it is already working.
+
+<Callout kind="note" title="The GIL">
+  CPython's Global Interpreter Lock means only one thread executes Python
+  bytecode at a time. So threads do not add CPU parallelism, which is exactly
+  why they are still excellent for IO-bound work and useless for CPU-bound work.
+</Callout>
+
+## Which tool
+
+| Work | Tool | Why |
+| --- | --- | --- |
+| Many network calls | `asyncio` | One task per request, cheap |
+| Some network calls, blocking libraries | `threading` | Existing code stays as it is |
+| CPU-bound, pure Python | `multiprocessing` | Separate interpreters, real cores |
+| CPU-bound, numeric | NumPy, Numba | Moves work out of Python |
+
+<Callout kind="watch" title="Concurrency adds failure modes">
+  Anything that runs in parallel can interleave: two updates to the same value,
+  a resource used by both, an exception in a thread that never reaches your
+  `try`. Every benefit comes with a new class of bug, which is why concurrency
+  should appear where waiting is demonstrably the bottleneck — not by default.
+</Callout>
+
+## Measure first
+
+```python
+import time
+
+start = time.perf_counter()
+result = serial_work()
+print(f"serial: {time.perf_counter() - start:.2f}s")
+
+start = time.perf_counter()
+result = concurrent_work()
+print(f"concurrent: {time.perf_counter() - start:.2f}s")
+```
+
+If the concurrent version is not faster, the work was not waiting, and you have
+added complexity for nothing. Always keep a serial version as the reference.
+
+<Callout kind="try" title="Find the bottleneck">
+  Time four sequential HTTP requests, then the same four concurrently with
+  `asyncio`. The second should be roughly as fast as the slowest single
+  request, not four times slower. That ratio is the whole case for concurrency.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Concurrency overlaps waiting, so it speeds up IO-bound work and does nothing
+  for CPU-bound work. Use `asyncio` for many requests, threads for blocking
+  libraries, processes for CPU work in pure Python. Measure before and after,
+  and keep a serial version for comparison.
+</Callout>

@@ -1,0 +1,100 @@
+---
+title: "NumPy Arrays"
+track: data
+order: 1
+summary: "The n-dimensional array at the centre of scientific Python: creating arrays, inspecting shape and dtype, and why element-wise loops are not the way."
+xp: 10
+tags: [data, numpy]
+objectives:
+  - Create arrays and read shape and dtype
+  - Understand that operations are element-wise
+  - Know when NumPy is the right tool
+sources:
+  - title: "SciPy Lecture Notes — 1.1. Getting started with NumPy"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/numpy.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "NumPy User Guide"
+    author: "NumPy Developers"
+    url: "https://numpy.org/doc/stable/user/index.html"
+    license: "BSD-3-Clause"
+    licenseUrl: "https://numpy.org/doc/stable/license.html"
+---
+
+## Import NumPy, not numpy
+
+```python
+import numpy as np
+
+values = np.array([1, 2, 3])
+print(values, values.shape, values.dtype)
+```
+
+`values.shape` is `(3,)`, `values.dtype` is `int64`. Those two attributes tell
+you most of what you need to know about an array at a glance.
+
+## Everything is element-wise
+
+```python
+a = np.array([1, 2, 3])
+b = np.array([10, 20, 30])
+
+print(a + b)        # [11 22 33]
+print(a * b)        # [10 40 90]
+print(a ** 2)       # [1 4 9]
+```
+
+`a * b` multiplies element by element, not like matrix multiplication. That trips
+up almost everyone once. For matrices, `@` is the operator:
+
+```python
+print(a @ b)
+```
+
+<Callout kind="note" title="Why it is faster">
+  These operations run in compiled C over contiguous memory, with no Python
+  bytecode per element. A loop in Python pays interpreter overhead per
+  iteration; NumPy pays it once. That is why vectorised code is often 50 to 100
+  times faster, and also why it uses more memory for temporary arrays.
+</Callout>
+
+## Useful creation functions
+
+```python
+np.zeros((3, 4))
+np.ones((2, 2))
+np.arange(0, 10, 2)
+np.linspace(0, 1, 100)
+np.array([[1, 2], [3, 4]], dtype=np.float64)
+```
+
+`arange` is integers by default and can surprise you with `arange(0, 1, 0.1)`
+producing an empty array because of floating-point accumulation. `linspace` is
+usually what you meant.
+
+## Aggregations
+
+```python
+values = np.array([3, 1, 4, 1, 5])
+
+print(values.sum(), values.mean(), values.min(), values.max())
+print(values.std(), values.argmax())
+```
+
+Every aggregation has a `nan`-aware twin: `np.nansum`, `np.nanmean`,
+`np.nanmax`. A single missing value otherwise poisons the whole result, which is
+a fact worth knowing before it costs you an afternoon.
+
+<Callout kind="try" title="Compare">
+  Write a loop that finds the mean of a million random numbers, then
+  `values.mean()`. Then write `values[values > values.mean()]` and count the
+  results with `np.count_nonzero`. Same answers, and one is not 50 times slower.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `np.array` builds an array, `.shape` and `.dtype` describe it, and operations
+  are element-wise — `*` is not matrix multiplication, `@` is. Aggregations come
+  with `nan`-aware variants. Use NumPy for numeric arrays, not for mixed types
+  or records.
+</Callout>

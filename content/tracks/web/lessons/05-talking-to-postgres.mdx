@@ -1,0 +1,103 @@
+---
+title: "Talking to Postgres"
+track: web
+order: 5
+summary: "From sqlite3 to a real server: connection pooling, transactions, migrations and the ORM that keeps queries readable."
+xp: 10
+tags: [web, databases]
+objectives:
+  - Connect to Postgres with a pool
+  - Use transactions correctly
+  - Manage schema with migrations
+sources:
+  - title: "SQLAlchemy Documentation"
+    author: "The SQLAlchemy Project"
+    url: "https://docs.sqlalchemy.org/en/20/core/engines.html"
+    license: "MIT"
+    licenseUrl: "https://github.com/sqlalchemy/sqlalchemy/blob/main/LICENSE"
+  - title: "The Python Tutorial — sqlite3"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/sqlite3.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## A pool, not a connection per request
+
+Opening a database connection takes milliseconds and a file descriptor. A pool
+keeps a small number open and hands them out.
+
+```python
+from sqlalchemy import create_engine
+
+engine = create_engine(DATABASE_URL, pool_size=5, max_overflow=10, pool_pre_ping=True)
+```
+
+`pool_pre_ping` checks a connection is alive before handing it over, which
+saves a class of "server closed the connection" errors in production.
+
+## Sessions
+
+```python
+from sqlalchemy.orm import Session
+
+def get_db() -> Iterator[Session]:
+    with Session(engine) as session:
+        yield session
+```
+
+The session is a unit of work: it tracks objects, flushes changes, and is the
+transaction boundary. The dependency from the previous lesson returns one per
+request.
+
+## Transactions
+
+```python
+with session.begin():
+    order = Order(user_id=user_id, total_cents=total)
+    session.add(order)
+    stock = session.get(Stock, item_id)
+    stock.remaining -= quantity
+```
+
+Both writes commit together or neither does. That is the entire point: a
+half-finished order with stock already decremented is a bug you will not find by
+reading the code.
+
+<Callout kind="watch" title="The lazy-loading trap">
+  Accessing an attribute after the session closes raises
+  `DetachedInstanceError`, usually deep inside a serialiser. Load what you need
+  with `selectinload` or `joinedload` while the session is open, or return plain
+  dictionaries.
+</Callout>
+
+## Migrations are history, not a reset
+
+```bash
+alembic revision --autogenerate -m "add orders table"
+alembic upgrade head
+```
+
+A migration is a versioned, ordered script. It has to be something a colleague
+can run against a database that already contains data, and it has to be
+reversible where possible. `alembic upgrade head` in CI keeps every environment
+at the same schema version.
+
+<Callout kind="note" title="ORM or raw SQL?">
+  An ORM removes most boilerplate and makes relationships and lazy loading easy
+  to misuse. Raw SQL is clearer for complex reports and aggregations. Most real
+  projects use both: the ORM for ordinary reads and writes, SQL for the queries
+  it cannot express well.
+</Callout>
+
+<Callout kind="try" title="Prove the transaction">
+  Write a transfer between two accounts, decrement one and increment the other
+  inside a transaction. Then deliberately raise an exception between them and
+  confirm neither balance changed.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Pool connections, use a session per request, and wrap multi-step writes in
+  one transaction. Load relationships before the session closes, and manage
+  schema with versioned migrations that run in CI.
+</Callout>

@@ -1,0 +1,43 @@
+---
+title: "Rotate a List"
+track: data-structures
+order: 10
+summary: "Rotate a list left by n positions without losing or duplicating items."
+xp: 25
+difficulty: medium
+functionName: "rotate"
+sources:
+  - title: "Exercism Python Track — concept: lists"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 8"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The task
+
+Write `rotate(values, n)` returning a new list rotated **left** by `n` positions.
+
+```python
+rotate([1, 2, 3, 4], 1)   # [2, 3, 4, 1]
+rotate([1, 2, 3, 4], 2)   # [3, 4, 1, 2]
+```
+
+## Rules
+
+- Rotating by 0, or by the length of the list, returns an equal list.
+- Rotating by more than the length wraps around: `rotate([1, 2, 3], 4)` is
+  `[2, 3, 1]`.
+- The original list is not modified.
+- An empty list rotates to an empty list.
+
+## The one-line version
+
+Slicing does all of it: `values[n:] + values[:n]`, after reducing `n` with the
+modulo operator. The exercise is to notice that, then to work out why the
+modulo is needed at all.

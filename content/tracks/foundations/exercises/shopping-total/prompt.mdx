@@ -1,0 +1,41 @@
+---
+title: "Shopping Total"
+track: foundations
+order: 14
+summary: "Calculate a basket total from a list of items and quantities."
+xp: 25
+difficulty: medium
+functionName: "basket_total"
+sources:
+  - title: "Exercism Python Track — concept: lists"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 8"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The task
+
+Write `basket_total(items)` where each item is a `(name, price, quantity)`
+tuple. Return the total cost of the basket.
+
+```python
+basket_total([("apple", 1.50, 4), ("bread", 2.25, 1)])  # 8.25
+```
+
+## Rules
+
+- Multiply each price by its quantity, then add everything.
+- An empty basket returns `0.0`.
+- Leave rounding to the caller: return the raw sum.
+
+## Two loops, one result
+
+Write it first with a `for` loop and an accumulator, then again with
+`sum(...)` and a generator expression. The second is one line and reads
+differently, which is why both are worth having written.

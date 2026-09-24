@@ -1,0 +1,96 @@
+---
+title: "Merging and Joining"
+track: data
+order: 5
+summary: "Combining tables on shared keys. Learn how the four join types differ, how a many-to-many merge multiplies rows, and how to validate the result."
+xp: 10
+tags: [data, pandas]
+objectives:
+  - Choose between merge, join and concat
+  - Use inner, left, outer and cross correctly
+  - Check the shape after every merge
+sources:
+  - title: "Pandas User Guide — Merging"
+    author: "The pandas Development Team"
+    url: "https://pandas.pydata.org/docs/user_guide/merging.html"
+    license: "BSD-3-Clause"
+    licenseUrl: "https://pandas.pydata.org/"
+  - title: "SciPy Lecture Notes — 3.1. Introduction to pandas"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/pandas.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## merge on a key
+
+```python
+orders = pd.DataFrame({
+    "order_id": [1, 2, 3],
+    "total": [100.0, 80.0, 120.0],
+})
+
+customers = pd.DataFrame({
+    "order_id": [1, 2, 4],
+    "region": ["north", "south", "east"],
+})
+
+merged = orders.merge(customers, on="order_id", how="left")
+```
+
+Three orders become three rows, with the region filled in where it was found and
+`NaN` where it was not. The left frame decides the row count.
+
+## The four joins
+
+| `how` | Keeps |
+| --- | --- |
+| `"inner"` | only keys in both |
+| `"left"` | all left rows, matching right ones |
+| `"right"` | all right rows, matching left ones |
+| `"outer"` | everything from both |
+
+<Callout kind="watch" title="Many-to-many multiplies rows">
+  ```python
+  wide = df1.merge(df2, on="key", how="left")
+  print(len(df1), "->", len(wide))
+  ```
+
+  If the row count grew, the join was many-to-many: two rows on each side
+  shared a key and every combination appeared. That is a modelling problem in
+  the source data, not a pandas surprise. Check `validate="m:1"` or
+  `validate="1:1"` and let pandas raise instead of guessing.
+</Callout>
+
+## Always check the shape
+
+```python
+print(df1.shape, df2.shape, merged.shape)
+print(merged.isna().sum())
+print(merged.head())
+```
+
+A merge that drops a third of your rows is either a filter you wanted or a bug
+you will regret in a month. One `print` makes the difference visible now.
+
+## concat and join
+
+```python
+frames = pd.concat([january, february], ignore_index=True)
+```
+
+`concat` stacks frames along an axis, matching on position or index, not on a
+key. `df.join` is `merge` with the index as the key. Stacking the same file
+twice by accident is the classic `concat` mistake; a row count check catches it.
+
+<Callout kind="try" title="Prove the multiplication">
+  Build two small frames with a shared key that appears twice on each side, and
+  merge them. Then add `validate="1:1"` and confirm pandas refuses. That error
+  message is one of the most useful you will read in data work.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `merge` joins on a key and the `how` decides which rows survive. Use `left` to
+  keep your original row set, `validate=` to refuse an unintended many-to-many,
+  and check the shape after every merge. `concat` stacks frames positionally.
+</Callout>

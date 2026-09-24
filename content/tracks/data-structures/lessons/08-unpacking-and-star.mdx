@@ -1,0 +1,142 @@
+---
+title: "Unpacking and Star"
+track: data-structures
+order: 8
+summary: "The * and ** operators turn sequences and dictionaries into arguments or capture leftovers. Covers multiple assignment, swapping, and the function signatures this makes possible."
+xp: 10
+tags: [data-structures, unpacking]
+objectives:
+  - Unpack sequences and dictionaries in assignments
+  - Use *args and **kwargs in function signatures
+  - Capture extra values with starred targets
+sources:
+  - title: "The Python Tutorial — 5.2. Tuple Unpacking"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Python for Everybody — Chapter 10"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+  - title: "Think Python, 2nd Edition — Chapter 3"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## Unpack on the left
+
+```python
+x, y = 10, 20
+name, score = ("ada", 100)
+first, second = [1, 2, 3, 4][:2]
+```
+
+The right-hand side is a sequence of the right length, and the left-hand names
+are bound to its items. This is why functions return tuples: it makes the
+contract readable at the call site.
+
+## The swap idiom
+
+```python
+x, y = y, x
+```
+
+Evaluate the right side completely, then rebind. Two lines become one, and
+there is no temporary variable to remember to delete.
+
+## Star captures the rest
+
+```python
+head, *middle, tail = [1, 2, 3, 4, 5]
+first, *rest = [9]
+```
+
+`*rest` always becomes a list, even when it captures one item or none. The star
+can appear anywhere in the target list, but at most once.
+
+```python
+a, *b, c, *d = [1, 2, 3, 4]
+```
+
+is legal and almost never what you meant.
+
+## Unpacking in loops
+
+```python
+points = [(0, 0), (3, 4), (5, 6)]
+
+for x, y in points:
+    print(x, y)
+
+for index, (name, score) in enumerate(scores.items()):
+    print(index, name, score)
+```
+
+Nested unpacking in a `for` target removes indexing from the loop body
+entirely. When the nesting grows past two levels, unpack in two statements
+instead.
+
+## *args and **kwargs
+
+```python
+def total(*values):
+    return sum(values)
+
+def report(title, **options):
+    return title, options
+
+total(1, 2, 3)
+report("run", retries=3, verbose=True)
+```
+
+Inside the function, `values` is a tuple and `options` is a dictionary. In the
+signature, a bare `*` forces every following parameter to be keyword-only,
+which is a good idea for anything after the first few positions:
+
+```python
+def connect(host, *, timeout=30, retries=3):
+    ...
+```
+
+Now `connect("localhost", 60)` is a `TypeError` rather than a silently wrong
+`timeout`.
+
+## Unpacking when calling
+
+```python
+numbers = [1, 2, 3]
+print(total(*numbers))
+
+settings = {"timeout": 10, "retries": 1}
+report("run", **settings)
+```
+
+`*` unpacks a sequence into positional arguments, `**` unpacks a mapping into
+keyword arguments. The reverse on the left-hand side collects them.
+
+<Callout kind="try" title="One pattern, both directions">
+  ```python
+  def move(x, y, dx=0, dy=0):
+      return x + dx, y + dy
+
+  position = (3, 4)
+  step = {"dx": 1, "dy": 1}
+
+  print(move(*position, **step))
+  ```
+
+  The function takes two positional and two keyword parameters, and the call
+  supplies them from two different structures. This is how configuration and
+  data are kept separate in most real code.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Unpacking assigns several names from one sequence, and `x, y = y, x` swaps.
+  A starred target collects the remainder into a list. In function signatures
+  `*args` collects positionally and `**kwargs` collects by keyword; a bare `*`
+  makes everything after it keyword-only.
+</Callout>

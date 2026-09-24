@@ -1,0 +1,120 @@
+---
+title: "Anatomy of an Exception"
+track: debugging
+order: 1
+summary: "Every exception carries a type, a message and a traceback. Learn what each part tells you and how the chain is built."
+xp: 10
+tags: [errors]
+objectives:
+  - Read the three parts of any exception
+  - Explain where a traceback comes from
+  - Recognise the built-in categories
+sources:
+  - title: "The Python Tutorial — 8. Errors and Exceptions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/errors.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 20"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "CS50's Introduction to Programming with Python"
+    author: "Harvard University"
+    url: "https://cs50.harvard.edu/python/"
+    license: "CC BY-NC-SA 4.0"
+    licenseUrl: "https://cs50.harvard.edu/python/license/"
+---
+
+## Three parts, always the same shape
+
+```python
+int("twelve")
+```
+
+```text
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ValueError: invalid literal for int() with base 10: 'twelve'
+```
+
+1. The **exception type**, `ValueError` — the category of failure.
+2. The **message**, `invalid literal for int()...` — what specifically was wrong.
+3. The **traceback**, the lines above — where it happened, innermost frame last.
+
+## The type narrows the search
+
+| Type | Means |
+| --- | --- |
+| `TypeError` | A value of the wrong kind arrived |
+| `ValueError` | Right kind, impossible value |
+| `NameError` | A name Python cannot see |
+| `AttributeError` | An attribute does not exist |
+| `IndexError` / `KeyError` | A collection was asked for something it does not have |
+| `IndentationError` / `SyntaxError` | The file could not be parsed |
+| `ZeroDivisionError` | Division by zero |
+| `StopIteration` | A generator or iterator is finished |
+
+Once the type narrows the cause to a category, the message usually names the
+value. That is usually enough to fix the bug without further searching.
+
+## The traceback is a call stack
+
+Each frame is one function on the way to the failure. Reading bottom-up:
+
+```text
+  File "report.py", line 12, in build_report      <- where the error surfaced
+    return total / count
+  File "stats.py", line 5, in mean
+    return sum(values) / count
+ZeroDivisionError: division by zero
+```
+
+`mean` was called by `build_report`. The error happened in `mean`. Everything
+below that line is context, not cause.
+
+<Callout kind="note" title="Exceptions are values">
+  ```python
+  try:
+      value = int(raw)
+  except ValueError:
+      value = 0
+  ```
+
+  An exception is an object. You can store it, inspect it, re-raise it and
+  compare its type. That is why `except ValueError:` works as a filter rather
+  than matching a message.
+</Callout>
+
+## The base class
+
+Everything inherits from `Exception`, and the ones you catch by default inherit
+from `BaseException` instead.
+
+```text
+BaseException
+├── KeyboardInterrupt
+├── SystemExit
+└── Exception
+    ├── ValueError
+    ├── TypeError
+    └── ...
+```
+
+`except Exception` catches ordinary errors and deliberately leaves
+`KeyboardInterrupt` and `SystemExit` alone, which is what you almost always
+want. A bare `except:` catches those too, so you cannot stop the program.
+
+<Callout kind="try" title="Collect three real ones">
+  Cause a `TypeError`, a `KeyError` and a `ZeroDivisionError` in this runtime.
+  Read each traceback from the bottom up and say, in one sentence each, what the
+  type told you before you read the message. That is the habit the lesson is for.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Every exception has a type, a message and a traceback. The type narrows the
+  cause, the message names the value, and the traceback is the call stack read
+  from the bottom up. Catch `Exception`, never a bare `except:`, so interrupts
+  still work.
+</Callout>

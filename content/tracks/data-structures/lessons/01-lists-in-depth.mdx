@@ -1,0 +1,137 @@
+---
+title: "Lists in Depth"
+track: data-structures
+order: 1
+summary: "The workhorse sequence: creating, indexing, slicing, and the methods that actually earn their place in real code."
+xp: 10
+tags: [data-structures, lists]
+objectives:
+  - Create, index and slice lists confidently
+  - Choose between append, extend, insert and +=
+  - Explain why list.pop returns a value and list.remove does not
+sources:
+  - title: "The Python Tutorial — 5.1. More on Lists"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Python for Everybody — Chapter 8"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+  - title: "Exercism Python Track — concept: lists"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## A list holds any values, in order
+
+```python
+languages = ["Python", "Rust", "Go"]
+mixed = [1, "two", 3.0, True, None]
+empty = []
+```
+
+Elements do not need to share a type, though a list of one kind is easier to
+reason about. Order is guaranteed and duplicates are allowed.
+
+## Indexing and slicing
+
+```python
+print(languages[0])
+print(languages[-1])
+print(languages[1:])
+print(languages[:2])
+print(languages[::2])
+```
+
+Slices never raise for being out of range; they return what exists. Assignment
+through a slice is a different story, and a common source of confusion:
+
+```python
+languages[1:] = ["Go", "Zig"]
+print(languages)
+```
+
+The slice had length two and the replacement has length two, so this replaces
+one item with one item. Give a different length and the list changes size.
+
+## The methods that matter
+
+| Method | Effect |
+| --- | --- |
+| `.append(x)` | Add one item to the end |
+| `.extend(iterable)` | Add every item of another sequence |
+| `.insert(i, x)` | Insert before index `i` |
+| `.pop()` | Remove and **return** the last item |
+| `.pop(i)` | Remove and return the item at `i` |
+| `.remove(x)` | Remove the first item equal to `x`, return nothing |
+| `.index(x)` | Position of the first equal item |
+| `.count(x)` | How many times `x` appears |
+| `.sort()` | Sort in place, returns `None` |
+| `.reverse()` | Reverse in place, returns `None` |
+
+<Callout kind="watch" title="Two methods that return nothing">
+  `sort()` and `reverse()` change the list in place and return `None`. Writing
+  `items = items.sort()` assigns `None` to your variable and destroys the
+  reference. This is the most common Python bug in the top ten.
+</Callout>
+
+## Appending versus extending
+
+```python
+items = [1, 2]
+items.append([3, 4])
+print(items)   # [1, 2, [3, 4]]
+
+items = [1, 2]
+items.extend([3, 4])
+print(items)   # [1, 2, 3, 4]
+```
+
+`append` adds one element, whatever its type. `extend` unpacks. When the code
+reads oddly, check which one you actually wanted.
+
+## Removing: pop, remove, del
+
+```python
+items = ["a", "b", "c", "b"]
+
+last = items.pop()
+value = items.pop(0)
+items.remove("c")
+del items[0]
+```
+
+`pop` gives you the removed value, which is why it is the method to reach for
+when the value matters. `remove` finds the first equal item and throws
+`ValueError` when it is missing. `del` removes by position and gives you
+nothing.
+
+## Copying is a separate skill
+
+```python
+original = [1, 2, 3]
+shallow = original[:]
+original.append(4)
+print(shallow)   # [1, 2, 3, 4]
+```
+
+A slice copies one level. Track 2 covers what happens when the items inside are
+themselves mutable, which is where shallow copies start to surprise people.
+
+<Callout kind="try" title="Three experiments">
+  1. Assign `b = a`, then append to `a`. What does `b` contain, and why?
+  2. Sort a list of mixed types and read the error message carefully.
+  3. Remove an item that is not present and read that error message too.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Lists are ordered, mutable and heterogeneous. Slice with `start:stop:step`,
+  and remember that `sort()` and `reverse()` return `None`. Use `append` for
+  one item and `extend` for many. Use `pop` when you need the value you are
+  removing.
+</Callout>

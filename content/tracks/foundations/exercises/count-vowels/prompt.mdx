@@ -1,0 +1,47 @@
+---
+title: "Count the Vowels"
+track: foundations
+order: 1
+summary: "Count how many vowel characters appear in a string."
+xp: 25
+difficulty: medium
+functionName: "count_vowels"
+sources:
+  - title: "Google's Python Class — Strings, Lists, and Dictionaries"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/strings_lists_dictionaries.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "The Python Tutorial — 3.1.2. Text"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The task
+
+Write `count_vowels(text)` that returns the number of vowels in `text`.
+
+```python
+count_vowels("Hello")  # 2
+```
+
+## Rules
+
+- Count `a`, `e`, `i`, `o`, `u`.
+- Ignore case: `count_vowels("AEIOU")` is `5`.
+- Ignore anything that is not a letter, including spaces, digits and
+  punctuation.
+- An empty string has zero vowels.
+
+## Two ways to solve it
+
+There is more than one correct answer, and comparing them is the exercise. Try
+a loop first. Then try the `for` loop's cousin that filters a string down to the
+characters you care about, and count what is left.
+
+```python
+vowels = "aeiou"
+clean = "".join(character for character in text.lower() if character in vowels)
+```

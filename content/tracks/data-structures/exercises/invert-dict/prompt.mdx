@@ -1,0 +1,42 @@
+---
+title: "Invert a Dictionary"
+track: data-structures
+order: 7
+summary: "Swap keys and values, deciding what happens when two keys share a value."
+xp: 25
+difficulty: medium
+functionName: "invert_dictionary"
+sources:
+  - title: "Google's Python Class — Strings, Lists, and Dictionaries"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/strings_lists_dictionaries.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "Exercism Python Track — concept: dictionaries"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## The task
+
+Write `invert_dictionary(mapping)` returning a new dictionary with keys and
+values swapped.
+
+```python
+invert_dictionary({"a": 1, "b": 2})  # {1: "a", 2: "b"}
+```
+
+## Rules
+
+- In this exercise every value is unique, so nothing is lost.
+- An empty dictionary returns an empty dictionary.
+- The original dictionary is not modified.
+
+## The complication to think about
+
+What should happen when two keys share a value? `{"a": 1, "b": 1}` cannot be
+inverted into a plain dictionary without losing information. The three honest
+answers are: keep the first, keep the last, or collect a list per value. Try
+the first, then implement the third, which is what real inverted indexes do.

@@ -1,0 +1,128 @@
+---
+title: "Why Objects"
+track: oop
+order: 1
+summary: "Before writing a class, know when one is the right tool. Bundling data with the functions that operate on it, and when a dictionary was enough."
+xp: 10
+tags: [oop, design]
+objectives:
+  - Decide between a class and a dictionary
+  - Recognise the responsibilities a class should own
+  - Avoid anemic classes that only hold data
+sources:
+  - title: "The Python Tutorial — 9. Classes"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/classes.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Python for Everybody — Chapter 14"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+  - title: "Think Python, 2nd Edition — Chapter 14"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## The problem classes solve
+
+A record of a user is three or four values that must travel together. A
+dictionary holds them fine:
+
+```python
+user = {"name": "ada", "email": "ada@example.com", "active": True}
+```
+
+The trouble starts when behaviour appears. Now every place that touches a user
+needs the same rules:
+
+```python
+display_name = user["name"] or user["email"].split("@")[0]
+user["active"] = bool(user["active"])
+```
+
+Those rules drift apart, get repeated, and are impossible to test in one place.
+A class bundles the data with the functions that own the rules.
+
+```python
+class User:
+    def __init__(self, name, email, active=True):
+        self.name = name
+        self.email = email
+        self.active = active
+
+    def display_name(self):
+        return self.name or self.email.split("@")[0]
+```
+
+## A class is a factory plus a promise
+
+`User` now documents what a user is, and `display_name` states one rule about it
+in exactly one place. The dictionary version had neither.
+
+<Callout kind="note" title="The test">
+  If two or more functions keep reaching into the same set of keys, that set is
+  a class waiting to be written. If exactly one function does, leave it as a
+  dictionary.
+</Callout>
+
+## Objects versus modules
+
+Both bundle things. A module is one file, usually one responsibility, and its
+functions operate on plain data. A class is a *value* that holds its own state,
+so you can have many independent ones.
+
+```python
+from geometry import area      # module: one thing, no state
+
+circle_a = Circle(2)          # class: many things, each with its own radius
+circle_b = Circle(10)
+```
+
+If you never need two of them at once, a module with functions is simpler and
+will stay simpler.
+
+## What belongs in a class
+
+- **State**: the data it owns.
+- **Invariants**: rules that must always hold, checked on the way in.
+- **Behaviour**: the operations that only make sense for that data.
+
+```python
+class Account:
+    def __init__(self, balance=0.0):
+        if balance < 0:
+            raise ValueError("balance cannot be negative")
+        self._balance = balance
+
+    def deposit(self, amount):
+        if amount <= 0:
+            raise ValueError("deposit must be positive")
+        self._balance += amount
+```
+
+The balance can never go negative, no matter which function touches the object.
+No dictionary version gives you that.
+
+## Don't start with inheritance
+
+Track 4 covers composition and inheritance side by side, and the surprising
+result is that you rarely need inheritance. Reach for a class when state and
+behaviour belong together; reach for composition when they do not.
+
+<Callout kind="try" title="Dictionary or class?">
+  Take a shopping basket. Write it as a dictionary first, then as a class with
+  `add`, `remove`, `total` and `is_empty`. Notice how many of the rules about
+  "a basket can never contain a negative quantity" have nowhere to live in the
+  dictionary version.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Classes bundle data with the rules that operate on it. Use one when several
+  functions keep touching the same keys, or when a value must stay valid. A
+  module with functions is better when you only ever need one of something and
+  there is no state. Own the invariants; do not begin with inheritance.
+</Callout>

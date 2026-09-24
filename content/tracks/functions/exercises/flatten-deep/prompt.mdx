@@ -1,0 +1,58 @@
+---
+title: "Flatten Deeply Nested Lists"
+track: functions
+order: 9
+summary: "Flatten a structure nested to any depth, with a type that is not a list treated as a leaf."
+xp: 25
+difficulty: medium
+functionName: "flatten_deep"
+sources:
+  - title: "Exercism Python Track — concept: lists"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "The Python Tutorial — 4.1. More Flow Control Tools"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The task
+
+Write `flatten_deep(items)` returning a single flat list, however deeply nested
+the input is.
+
+```python
+flatten_deep([1, [2, [3, [4]]]])   # [1, 2, 3, 4]
+```
+
+## Rules
+
+- Only lists are treated as containers. A string is a leaf, so
+  `["ab", ["cd"]]` returns `["ab", "cd"]` and not a list of characters.
+- Tuples are leaves too: `[(1, 2), [3]]` returns `[(1, 2), 3]`.
+- Empty lists contribute nothing.
+
+## The shape
+
+```python
+def flatten_deep(items):
+    result = []
+    for item in items:
+        if isinstance(item, list):
+            result.extend(flatten_deep(item))
+        else:
+            result.append(item)
+    return result
+```
+
+One recursive call handles every depth, and the accumulator parameter from lesson
+7 of this track is not needed because `extend` mutates a single list.
+
+<Callout kind="try" title="Why isinstance matters">
+  Change the check to `if isinstance(item, (list, str)):` and watch the string
+  case produce characters. The `isinstance` check is the entire specification of
+  what "nested" means in this exercise.
+</Callout>

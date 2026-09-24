@@ -1,0 +1,99 @@
+---
+title: "Virtual Environments and pip"
+track: stdlib
+order: 5
+summary: "Isolating dependencies per project, installing packages reproducibly, and the difference between a module, a distribution and a virtual environment."
+xp: 10
+tags: [tooling, packaging]
+objectives:
+  - Create and use a virtual environment
+  - Install and pin dependencies
+  - Explain why installing into the system Python is a mistake
+sources:
+  - title: "The Python Tutorial — 3. An Informal Introduction to Python"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/venv.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "PyPA Packaging Tutorial"
+    author: "Python Packaging Authority"
+    url: "https://packaging.python.org/en/latest/tutorials/packaging-projects/"
+    license: "PSF-style permissive"
+    licenseUrl: "https://packaging.python.org/en/latest/"
+---
+
+## The three names people mix up
+
+- A **module** is a `.py` file you import.
+- A **distribution** is a named, installable bundle of modules — what `pip`
+  installs.
+- A **virtual environment** is a private directory containing a Python
+  interpreter and its installed distributions.
+
+`pip install requests` installs the *distribution* requests, which provides the
+*module* you import as `requests`.
+
+## Create one per project
+
+```bash
+python -m venv .venv
+```
+
+Windows:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+macOS and Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+The prompt gains `(.venv)` and `python -m pip install ...` now targets that
+environment only.
+
+<Callout kind="watch" title="Why the system Python is the wrong place">
+  Installing into the system interpreter means one project can upgrade a library
+  out from under another, and you cannot reproduce anyone's setup because you do
+  not know what was there before. A virtual environment per project makes both
+  problems disappear.
+</Callout>
+
+## Pin what you depend on
+
+```bash
+python -m pip install requests
+python -m pip freeze > requirements.txt
+python -m pip install -r requirements.txt
+```
+
+`pip freeze` lists everything installed, which is more than you depended on. For
+a real project, declare what you need in a `pyproject.toml` and let a lock file
+record the exact resolved versions — that is the subject of the next lesson.
+
+## The tools you need
+
+```bash
+python -m pip install --upgrade pip
+python -m pip list
+python -m pip show requests
+python -m pip uninstall requests
+```
+
+Using `python -m pip` rather than bare `pip` guarantees the pip belongs to the
+same interpreter as the script you are running. On some systems bare `pip`
+points somewhere else entirely.
+
+<Callout kind="try" title="Prove the isolation">
+  Create a virtual environment, install one small package, run a script that
+  imports it, then deactivate and run the same script. The second run fails,
+  which is the whole point.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  One virtual environment per project, always. `python -m pip` keeps pip and the
+  interpreter together. Record your dependencies so another machine can
+  reproduce the environment.
+</Callout>

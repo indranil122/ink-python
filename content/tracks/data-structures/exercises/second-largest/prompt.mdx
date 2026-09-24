@@ -1,0 +1,42 @@
+---
+title: "Second Largest"
+track: data-structures
+order: 11
+summary: "Return the second largest distinct value in a sequence, or None when there is not one."
+xp: 25
+difficulty: medium
+functionName: "second_largest"
+sources:
+  - title: "Exercism Python Track — concept: lists"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Think Python, 2nd Edition — Chapter 7"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## The task
+
+Write `second_largest(numbers)` returning the second largest **distinct** value,
+or `None` when the input has fewer than two distinct values.
+
+```python
+second_largest([4, 1, 9, 9])  # 4
+second_largest([5, 5])        # None
+```
+
+## Rules
+
+- Duplicates do not count twice: `[9, 9, 4]` is `4`, not `9`.
+- Fewer than two distinct values returns `None`.
+- An empty list returns `None`.
+
+## The built-in you are not allowed to use
+
+`sorted(set(numbers))[-1]` solves this in one line and is worth writing first to
+prove you understand it. The exercise is the version without those two calls,
+which is a single pass with one variable to remember.

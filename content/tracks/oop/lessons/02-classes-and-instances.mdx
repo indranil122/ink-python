@@ -1,0 +1,141 @@
+---
+title: "Classes and Instances"
+track: oop
+order: 2
+summary: "The class statement, __init__, instances, and the difference between an attribute on the class and an attribute on the instance."
+xp: 10
+tags: [oop, classes]
+objectives:
+  - Define a class and create instances
+  - Understand __init__ and self
+  - Tell class attributes from instance attributes
+sources:
+  - title: "The Python Tutorial — 9.3. More Examples"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/classes.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: classes"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Python for Everybody — Chapter 14"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## class, then parentheses
+
+```python
+class Dog:
+    pass
+
+
+rex = Dog()
+```
+
+`Dog` is a class. `rex` is an instance of it. `pass` is a valid body and means
+"nothing yet", which is the normal way to write an empty class.
+
+## __init__ runs on creation
+
+```python
+class Dog:
+    def __init__(self, name, age=0):
+        self.name = name
+        self.age = age
+```
+
+`__init__` is called automatically when you write `Dog("Rex", 3)`. The first
+parameter, `self`, is the instance being created. Python passes it for you, so
+you never supply it at the call site.
+
+<Callout kind="watch" title="Forgetting self">
+  ```python
+  class Dog:
+      def __init__(self, name):
+          self.name = name
+
+      def speak(self):
+          print(self.name)
+  ```
+
+  Inside `speak`, `self` means *the dog this method was called on*. Writing
+  `Dog("Rex").speak()` prints Rex. It is the same object you called it on, which
+  is what makes methods useful.
+</Callout>
+
+## Methods are functions on the class
+
+```python
+class Dog:
+    def __init__(self, name, age=0):
+        self.name = name
+        self.age = age
+
+    def birthday(self):
+        self.age += 1
+        return self.age
+
+    def is_adult(self):
+        return self.age >= 3
+```
+
+`self.age += 1` both reads and writes the instance attribute. Two dogs keep
+separate ages because they are separate objects.
+
+## Class attributes versus instance attributes
+
+```python
+class Dog:
+    species = "canis familiarus"
+
+    def __init__(self, name):
+        self.name = name
+```
+
+`species` is on the **class**, shared by every dog. `name` is on the
+**instance**. Assigning to `self.name` creates an instance attribute that
+shadows nothing; assigning to `Dog.species` changes it for all of them.
+
+```python
+class Dog:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+        self.age_in_dog_years = age * 7
+```
+
+`age_in_dog_years` is computed once at construction. If `age` changes later,
+the derived value is stale. Decide per attribute whether it is stored or
+computed, and do not store what you can derive.
+
+## Checking and converting
+
+```python
+rex = Dog("Rex", 3)
+
+print(isinstance(rex, Dog))
+print(type(rex) is Dog)
+print(rex.__dict__)
+```
+
+`__dict__` shows the instance's attributes, which is the fastest way to see what
+a third-party object actually holds.
+
+<Callout kind="try" title="Small class, real rules">
+  Write a `BankAccount` with an owner and a balance. Start the balance at zero
+  if none is given, and refuse a negative starting balance with a `ValueError`.
+  Add `deposit` and `withdraw`, both of which reject non-positive amounts. Now
+  prove the class holds: no sequence of calls can produce a negative balance.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `class` defines a factory; calling it creates an instance. `__init__` receives
+  `self`, the new object, plus your arguments. Assign to `self.x` for per-object
+  state, and to `Class.x` for something shared. Derive values rather than
+  storing them twice.
+</Callout>

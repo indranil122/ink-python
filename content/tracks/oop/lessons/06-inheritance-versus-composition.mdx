@@ -1,0 +1,146 @@
+---
+title: "Inheritance versus Composition"
+track: oop
+order: 6
+summary: "Two ways to build one class from another, why composition is usually safer, and how to tell when inheritance is genuinely the right tool."
+xp: 10
+tags: [oop, design]
+objectives:
+  - Use inheritance correctly with super()
+  - Explain the fragile base class problem
+  - Refactor inheritance into composition
+sources:
+  - title: "The Python Tutorial — 9.5. Inheritance"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/classes.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 16"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Inheritance shares behaviour
+
+```python
+class Shape:
+    def describe(self):
+        return f"{self.__class__.__name__} with area {self.area():.2f}"
+
+
+class Rectangle(Shape):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+```
+
+`Rectangle` is a `Shape`: `isinstance` says so, and it inherits `describe`.
+The subclass provides what differs and inherits the rest.
+
+## super() calls the parent properly
+
+```python
+class Shape:
+    def __init__(self, name):
+        self.name = name
+
+
+class Rectangle(Shape):
+    def __init__(self, width, height):
+        super().__init__("rectangle")
+        self.width = width
+        self.height = height
+```
+
+`super().__init__(...)` runs the parent's initialiser with the current object.
+The old form, `Shape.__init__(self, ...)`, breaks as soon as a grandparent is
+involved or someone changes the parent.
+
+## The problem inheritance creates
+
+```python
+class Rectangle(Shape):
+    def set_size(self, width, height):
+        self.width = width
+        self.height = height
+
+
+class Square(Rectangle):
+    def set_size(self, side):
+        self.width = side
+        self.height = side
+```
+
+A square *is* a rectangle, so inheritance is semantically correct — and
+`Square` now has a `set_width` inherited from `Rectangle` that can put it into
+a state that is not a square. This is the fragile base class problem: a
+subclass is coupled to the internals of its parent, and every future change to
+the parent can break it.
+
+## Composition instead
+
+```python
+class Square:
+    def __init__(self, side):
+        self.rectangle = Rectangle(side, side)
+```
+
+Or, more often, accept an object instead of becoming one:
+
+```python
+class Report:
+    def __init__(self, rows, formatter):
+        self.rows = rows
+        self.formatter = formatter
+```
+
+Now `Report` works with any formatter, a formatter can be tested on its own, and
+neither class can corrupt the other.
+
+<Callout kind="note" title="A practical rule">
+  Use inheritance when the relationship is *is-a* and the parent is designed for
+  extension. Use composition when the relationship is *has-a*, when the
+  behaviour changes often, or when the parent has state you do not want to
+  inherit. Most Python code leans on composition.
+</Callout>
+
+## Mixins: inheritance without a parent contract
+
+```python
+class Describable:
+    def describe(self):
+        return f"{self.__class__.__name__} instance"
+
+
+class User(Describable):
+    def __init__(self, name):
+        self.name = name
+```
+
+A mixin adds a small, stateless behaviour and assumes nothing about the
+subclass beyond the attribute it uses. That is a much safer kind of inheritance
+than building a hierarchy of substantial classes.
+
+<Callout kind="try" title="Refactor on purpose">
+  Take a class with three levels of inheritance and convert the middle level to
+  a mixin. Then convert one more relationship to composition. Measure how many
+  methods each class still has, and decide which version you would rather debug.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Inheritance shares behaviour and is right for a genuine *is-a* relationship
+  designed for extension. Composition passes collaborators in and is right when
+  the relationship is *has-a* or the behaviour changes. Use `super()` for
+  cooperative initialisation, and remember that a subclass is coupled to the
+  parent's internals.
+</Callout>

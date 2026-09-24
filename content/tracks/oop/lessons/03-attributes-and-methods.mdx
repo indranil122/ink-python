@@ -1,0 +1,124 @@
+---
+title: "Attributes and Methods"
+track: oop
+order: 3
+summary: "Instance methods, class methods and static methods: what each is for, and how to choose without guessing."
+xp: 10
+tags: [oop, methods]
+objectives:
+  - Distinguish instance, class and static methods
+  - Use @classmethod for constructors and @staticmethod for helpers
+  - Keep the public surface small
+sources:
+  - title: "The Python Tutorial — 9.4. Class and Instance Variables"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/classes.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: classes"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## Instance methods are the default
+
+```python
+class Rectangle:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+```
+
+`area` uses `self`, so it needs an instance. `Rectangle.area(rect)` is the same
+call written out.
+
+## Class methods receive the class
+
+```python
+class Rectangle:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    @classmethod
+    def square(cls, side):
+        return cls(side, side)
+
+    def area(self):
+        return self.width * self.height
+```
+
+```python
+Rectangle.square(4).area()   # 16
+```
+
+`cls` is the class, and `cls(...)` builds an instance of it. The reason this
+matters: a subclass of `Rectangle` gets a `square` that returns the subclass.
+Hard-coding `Rectangle(...)` inside the method would quietly break that.
+
+<Callout kind="note" title="The alternative constructor pattern">
+  `Rectangle.square(4)` reads as "a rectangle that is square". The older habit
+  is a `from_string` or `from_dict` classmethod, which is the same idea: the
+  class owns every way of building one of itself, so callers never have to know
+  the internal layout.
+</Callout>
+
+## Static methods need neither
+
+```python
+class Rectangle:
+    @staticmethod
+    def is_valid(width, height):
+        return width > 0 and height > 0
+```
+
+No `self`, no `cls`. It is a function that happens to live in the class because
+that is where it belongs conceptually. Used correctly, a static method is a
+strong hint that the function should have been a module-level function.
+
+## Choosing
+
+| Kind | Receives | Use when |
+| --- | --- | --- |
+| Instance method | `self` | It needs this object's data |
+| Class method | `cls` | It builds instances of the class |
+| Static method | nothing | It is a helper related to the concept |
+
+## Keeping the surface small
+
+A class with thirty public methods is hard to use, because the reader cannot
+tell which one to reach for. Underscore what is internal:
+
+```python
+class Rectangle:
+    def __init__(self, width, height):
+        self._validate(width, height)
+        self.width = width
+        self.height = height
+
+    def _validate(self, width, height):
+        if width <= 0 or height <= 0:
+            raise ValueError("sides must be positive")
+```
+
+The underscore is a promise, not enforcement. Everything without one is part of
+the API, and changing it later breaks callers.
+
+<Callout kind="try" title="Design the constructor">
+  Write a `Temperature` class that can be built from Celsius, Fahrenheit or
+  Kelvin: one `__init__` taking a value and a unit, plus two classmethods,
+  `from_celsius` and `from_fahrenheit`, that call it. Then confirm that
+  `Temperature.from_celsius(0).to_fahrenheit()` gives `32`.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Instance methods get `self` and need the object's data. Class methods get
+  `cls` and should build instances with `cls(...)` so subclasses work. Static
+  methods get neither and are usually a sign the function belongs in a module.
+  Underscore internals to keep the public surface small.
+</Callout>

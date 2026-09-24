@@ -1,0 +1,100 @@
+---
+title: "Routing and Validation"
+track: web
+order: 3
+summary: "Path parameters, query parameters, request bodies and dependency injection — the four ways a client hands you data, and how to validate each."
+xp: 10
+tags: [web, fastapi]
+objectives:
+  - Choose path, query, body or header for each value
+  - Validate with Pydantic models
+  - Share logic with dependencies
+sources:
+  - title: "FastAPI Documentation — Request Body"
+    author: "Sebastián Ramírez"
+    url: "https://fastapi.tiangolo.com/tutorial/body/"
+    license: "MIT"
+    licenseUrl: "https://github.com/fastapi/fastapi/blob/main/LICENSE"
+  - title: "The Python Tutorial — 7. Input and Output"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/inputoutput.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## Four places for a value
+
+| Where | Example | Use for |
+| --- | --- | --- |
+| Path | `/orders/{order_id}` | Which resource |
+| Query | `/orders?status=open&limit=20` | Filtering, sorting, paging |
+| Body | JSON payload | Creating or updating |
+| Header | `Authorization` | Credentials and content negotiation |
+
+Putting a filter in the path turns `/orders/status/open` into a second route to
+maintain. Filters belong in the query string.
+
+## Query parameters
+
+```python
+@app.get("/orders")
+def list_orders(status: str | None = None, limit: int = Query(20, ge=1, le=100)):
+    ...
+```
+
+Every parameter that is not a path, body or dependency becomes a query
+parameter automatically. `Query` gives it a default and bounds, and FastAPI
+rejects `limit=500` with a 422 before your code runs.
+
+<Callout kind="note" title="Validate at the edge">
+  Every value that crosses the network is untrusted: query strings, headers,
+  bodies, path segments. Validate it once at the boundary with a Pydantic model
+  or a typed parameter, and the rest of your function can trust its inputs.
+</Callout>
+
+## Dependencies
+
+```python
+from typing import Annotated
+from fastapi import Depends
+
+def get_db() -> Iterator[Session]:
+    with SessionLocal() as db:
+        yield db
+
+DbSession = Annotated[Session, Depends(get_db)]
+
+@app.get("/orders")
+def list_orders(db: DbSession):
+    ...
+```
+
+A dependency is a function FastAPI calls before yours. The `yield` version
+guarantees cleanup even if the request raises, which is the `with` guarantee from
+Track 5 in a different costume. Auth, rate limiting, pagination and database
+sessions all become dependencies instead of copy-pasted blocks.
+
+## Response codes and errors
+
+```python
+from fastapi import HTTPException
+
+if order.user_id != current_user.id:
+    raise HTTPException(status_code=404, detail="not found")
+```
+
+Returning 404 for someone else's resource rather than 403 avoids confirming
+that it exists. For validation failures, let the models do it; for domain rules,
+raise `HTTPException` with a message that tells the client what to change.
+
+<Callout kind="try" title="Add a dependency">
+  Create a `get_current_user` dependency that reads a bearer token and returns a
+  user, then use it on two endpoints. Add a second dependency for a database
+  session. Notice how much repetition has disappeared from the handlers.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Paths identify, queries filter, bodies carry data, headers carry credentials.
+  Validate every one at the boundary, share cross-cutting work with
+  dependencies, and use `yield` in a dependency when it needs cleanup.
+</Callout>

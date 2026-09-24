@@ -1,0 +1,152 @@
+---
+title: "Reading Errors and Docs"
+track: foundations
+order: 10
+summary: "The professional habit: read the error, then read the documentation. A repeatable method for turning a confusing failure into a specific question, and the four documentation habits that make answers findable."
+xp: 10
+tags: [basics, debugging, documentation]
+objectives:
+  - Use a four-step method to diagnose any exception
+  - Read a traceback from the bottom up and find the line you wrote
+  - Search documentation effectively and read help output critically
+sources:
+  - title: "The Python Tutorial — 1.1. Using the Python Interactive Interpreter"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/interpreter.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "The Python Tutorial — 7.1. Raising Exceptions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/errors.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Google's Python Class — Debugging and Unit Testing"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+---
+
+## A repeatable method for any failure
+
+Almost every debugging session can be reduced to the same four moves. Doing them
+in order is faster than reading code top to bottom hoping for a clue.
+
+1. **Reproduce.** Make the failure happen again, reliably, with the smallest
+   input that still fails.
+2. **Read the traceback from the bottom.** The last line names the exception and
+   says what went wrong. The line above it points at the exact position.
+3. **Form one specific question.** Not "why is this broken" but "why is this
+   list empty at line 14".
+4. **Check one thing.** Change a single variable — a print, a type, an
+   assumption — and run again.
+
+<Callout kind="note" title="Why the last step matters">
+  Changing one thing at a time is what makes an experiment an experiment. Two
+  simultaneous edits can each fix the bug and introduce a second one, and then
+  you have learned nothing.
+</Callout>
+
+## Every traceback has the same shape
+
+```text
+Traceback (most recent call last):
+  File "main.py", line 12, in <module>
+    total = prices[3]
+  File "report.py", line 5, in build
+    return total / count
+ZeroDivisionError: division by zero
+```
+
+Read it like this:
+
+- The **last line** is the exception: `ZeroDivisionError: division by zero`.
+- The **closest frame above it** is where it happened: inside `build`, in
+  `report.py`, line 5.
+- The frames further up are the call chain that got you there.
+
+The exception *type* tells you the category of problem. `TypeError` means a
+value of the wrong kind; `ValueError` means the right kind with an impossible
+value; `NameError` means a name Python cannot see; `IndexError` and
+`KeyError` mean you asked for something a collection does not have;
+`IndentationError` and `SyntaxError` mean Python could not even parse the file.
+
+## The errors you will meet this week
+
+```python
+int("twelve")
+```
+
+`ValueError`. The type was acceptable, the value was not.
+
+```python
+len(5)
+```
+
+`TypeError`. `len` works on objects with a length, and an integer has none.
+
+```python
+"a" + 1
+```
+
+`TypeError`. Two values that do not know how to combine.
+
+```python
+[1, 2, 3][5]
+```
+
+`IndexError`. The sequence has three items, and you asked for the sixth.
+
+```python
+{"a": 1}["b"]
+```
+
+`KeyError: 'b'`. Dictionaries raise on missing keys instead of returning
+nothing, which is a deliberate design choice you will work around in Track 2.
+
+## help is documentation
+
+Python ships its own reference in the interpreter, and it is more precise than
+most search results.
+
+```python
+help(str.split)
+help(dict.get)
+```
+
+The output lists the signature, a one-line summary, and a worked example. For
+quick facts, this is faster than the web.
+
+```python
+print(str.split.__doc__)
+```
+
+<Callout kind="watch" title="Read documentation critically">
+  A signature tells you what is allowed, not what is sensible. `dict.get(key)`
+  takes an optional default, so forgetting it returns `None` rather than
+  raising — a silent failure that no traceback will ever report. The
+  difference between reading and *understanding* documentation is asking what
+  happens in the case the documentation calls "optional".
+</Callout>
+
+## Ask better questions
+
+When you are stuck, the quality of your search depends on the quality of the
+question. Error messages are unusually good search terms, because they are
+specific.
+
+- Bad: "python list not working"
+- Better: "IndexError list index out of range python"
+- Best: "`IndexError: list index out of range` after `zip` shorter list"
+
+Include the exception name, the library or function, and what you expected.
+That combination finds the right page almost every time.
+
+<Callout kind="recap" title="Recap">
+  Reproduce, read the traceback from the bottom, form one specific question,
+  change one thing. The exception type categorises the problem: `TypeError` for
+  the wrong kind, `ValueError` for an impossible value, `NameError` for an
+  unknown name, `KeyError` and `IndexError` for missing collection entries. Use
+  `help()` before searching, and always read what the documentation says about
+  the optional parts.
+</Callout>

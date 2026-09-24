@@ -1,0 +1,152 @@
+---
+title: "Strings and Text"
+track: foundations
+order: 6
+summary: "Strings are sequences of characters, and almost every real program treats them as such. Covers indexing, slicing, methods, f-strings, and the difference between joining and concatenating."
+xp: 10
+tags: [basics, strings]
+objectives:
+  - Index and slice a string with confidence
+  - Use f-strings instead of manual concatenation
+  - Choose between join, +, and replace for combining text
+sources:
+  - title: "The Python Tutorial — 3.1.2. Text"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Google's Python Class — Strings, Lists, and Dictionaries"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/strings_lists_dictionaries.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "Python for Everybody — Chapter 3"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## A string is a sequence
+
+Quotes make a string. Underneath, a string is an ordered sequence of
+characters, which means positions matter and start at zero.
+
+```python
+language = "Python"
+
+print(language[0])
+print(language[1])
+print(language[-1])
+print(len(language))
+```
+
+The first character is `P`, the second is `y`, and the last is `n`. The length
+is `6`. Index `-1` means *one from the end*, which saves counting.
+
+## Slicing takes a range
+
+A slice is written `start:stop`, and the stop value is **excluded**.
+
+```python
+language = "Python"
+
+print(language[0:3])
+print(language[2:])
+print(language[:2])
+print(language[::2])
+```
+
+`[0:3]` gives `Pyt`. `[:2]` gives `Py`. `[::2]` steps by two and gives `Pto`,
+which is the quickest way to reverse-check your index arithmetic. A slice never
+raises an error for being out of range; it simply returns what exists.
+
+## Strings are immutable
+
+You cannot change a character in place, because strings are immutable.
+
+```python
+greeting = "hello"
+greeting = greeting.upper()
+print(greeting)
+```
+
+Every "modifying" string method returns a **new** string and leaves the original
+alone. The same is true of lists, but for a different reason — you will meet
+that in Track 2.
+
+## f-strings are the right way to build text
+
+```python
+name = "Ada"
+score = 96.4567
+
+print(f"{name} scored {score:.1f} percent")
+print(f"{name!r} has {len(name)} characters")
+```
+
+The `f` prefix turns the string into a template. Inside the braces you can put
+a variable, an expression, or even call a function. `:.1f` formats a float to
+one decimal place. This replaces the older `.format()` and `%` styles, which
+you will meet in old code but should not write in new code.
+
+<Callout kind="try" title="Measure and cut">
+  ```python
+  sentence = "  Python is a language, not a snake  "
+  print(sentence.strip())
+  print(sentence.split(","))
+  print(sentence.upper().count("A"))
+  ```
+
+  Work out each line before running it. `strip` removes surrounding whitespace,
+  `split` cuts on a separator and returns a list, and `count` counts
+  occurrences of a substring.
+</Callout>
+
+## Joining versus concatenating
+
+```python
+items = ["notes", "code", "tests"]
+
+print("".join(items))
+print(", ".join(items))
+print(" - ".join(items))
+```
+
+`join` inserts your separator between the pieces. The idiomatic way to turn a
+list of values into one line of text is exactly this.
+
+```python
+bad = ""
+for item in items:
+    bad = bad + item + ", "
+```
+
+This works and is slow, because each `+` builds an entirely new string. The
+`join` version is the professional habit, and the loop version is a good example
+of code that is correct and still wrong.
+
+<Callout kind="watch" title="Strings are not text files">
+  A string holds characters; it does not know about line endings, encodings or
+  disk. Reading a file and working with its text are separate concerns, and
+  Track 6 covers the file part properly.
+</Callout>
+
+## The methods worth memorising
+
+| Method | Purpose |
+| --- | --- |
+| `.strip()` | Remove leading and trailing whitespace |
+| `.lower()` / `.upper()` | Change case |
+| `.split(sep)` | Split into a list on a separator |
+| `.join(list)` | Combine a list into one string |
+| `.replace(a, b)` | Replace every occurrence |
+| `.startswith(p)` / `.endswith(p)` | Test the ends |
+| `.find(p)` | Index of first match, or `-1` |
+
+<Callout kind="recap" title="Recap">
+  Strings are zero-indexed sequences. Slice with `start:stop` and never fear an
+  out-of-range slice. Strings are immutable, so methods return new values. Use
+  f-strings to compose text and `join` to build one string from many. Reach for
+  `strip`, `split`, `replace` and `count` before writing a loop.
+</Callout>

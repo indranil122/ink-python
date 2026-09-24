@@ -1,0 +1,119 @@
+---
+title: "Regular Expressions"
+track: files
+order: 6
+summary: "A small language for finding text. Covers the metacharacters, raw strings, groups, and when a regex is the wrong tool."
+xp: 10
+tags: [files, regex]
+objectives:
+  - Write a pattern with character classes, anchors and quantifiers
+  - Use groups and named groups
+  - Choose between re and str methods
+sources:
+  - title: "The Python Tutorial — 7.2.1. Regular Expression"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/re.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Automate the Boring Stuff with Python — Pattern Matching"
+    author: "Al Sweigart"
+    url: "https://automatetheboringstuff.com/chapter07/"
+    license: "CC BY-NC-SA 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc-sa/3.0/"
+---
+
+## Always a raw string
+
+```python
+import re
+
+pattern = r"\d{4}-\d{2}-\d{2}"
+match = re.search(pattern, "due 2026-09-24")
+print(match.group())
+```
+
+`r"..."` means the backslashes belong to the regex, not to Python. Without the
+`r` prefix you write `"\d"` and get a deprecation warning at best, and `\n`
+becomes a newline rather than the letter n.
+
+## The metacharacters that matter
+
+| Pattern | Matches |
+| --- | --- |
+| `.` | any character except a newline |
+| `\d` `\w` `\s` | digit, word character, whitespace |
+| `[abc]`, `[^abc]` | one of, anything but |
+| `*` `+` `?` | zero or more, one or more, optional |
+| `{2,4}` | between two and four |
+| `^` `$` | start and end of the string or line |
+| `(...)` | capture a group |
+| `\|` | alternation inside a group |
+
+```python
+re.findall(r"\b\w+@\w+\.\w+\b", text)
+```
+
+finds every email-shaped token, and `\b` word boundaries stop it matching the
+middle of a longer word.
+
+## Groups
+
+```python
+match = re.search(r"(\d{4})-(\d{2})-(\d{2})", text)
+year, month, day = match.groups()
+
+named = re.search(r"(?P<year>\d{4})-(?P<month>\d{2})", text)
+print(named.group("year"))
+```
+
+`(?P<name>...)` is much easier to read three weeks later than `group(1)`.
+
+<Callout kind="note" title="Compile before the loop">
+  ```python
+  pattern = re.compile(r"^\s*#")
+  for line in lines:
+      if pattern.match(line):
+          ...
+  ```
+
+  `re.compile` parses the pattern once. Using module-level functions in a hot
+  loop re-parses it every call, which is a real cost on large files.
+</Callout>
+
+## Split and sub
+
+```python
+re.split(r"[,;]\s*", line)
+re.sub(r"\s+", " ", text)
+re.sub(r"\bcat\b", "dog", text, count=1)
+```
+
+`\b` in the last one is why "concatenate" is untouched while "cat" is replaced.
+
+## When not to use a regex
+
+```python
+text.replace(" ", "")
+text.split(",")
+"prefix" in text
+text.startswith("prefix")
+text.count("x")
+```
+
+Every one of those is clearer and faster than the equivalent pattern. Regexes
+earn their complexity for *patterns* — repeated structure, alternation,
+validation. For a fixed substring, use the string method.
+
+<Callout kind="try" title="Write it twice">
+  Match an email address with a regex, then without one, and note how much
+  shorter the non-regex version is when you only need to check a prefix. Then
+  write the pattern you actually need for validation, with anchors and a
+  sensible length limit.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Use raw strings, compile patterns used in loops, and reach for
+  `search`, `findall`, `split`, `sub` and `match`. Anchors, character classes
+  and word boundaries do most of the work. For a fixed substring, prefer the
+  string method.
+</Callout>

@@ -1,0 +1,92 @@
+---
+title: "Grouping and Aggregation"
+track: data
+order: 4
+summary: "Split by key, apply a function, combine the results. groupby is the workhorse of data analysis and the most misused method in pandas."
+xp: 10
+tags: [data, pandas]
+objectives:
+  - Group and aggregate in one expression
+  - Aggregate several columns at once
+  - Use transform to keep the original shape
+sources:
+  - title: "SciPy Lecture Notes — 3.3.1. Data aggregation"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/pandas.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Split, apply, combine
+
+```python
+sales = pd.DataFrame({
+    "region": ["north", "north", "south", "south", "north"],
+    "total": [100.0, 50.0, 80.0, 120.0, 30.0],
+})
+
+summary = sales.groupby("region")["total"].agg(["sum", "mean", "count"])
+```
+
+That is a DataFrame with one row per region and three columns of statistics. In
+one expression, with no loop.
+
+## Named aggregations
+
+```python
+summary = sales.groupby("region").agg(
+    revenue=("total", "sum"),
+    orders=("total", "count"),
+    average=("total", "mean"),
+)
+```
+
+Named columns are worth the extra typing: the output is self-describing, and
+downstream code refers to names rather than remembering which column came third.
+
+```python
+by_region = sales.groupby("region", as_index=False)["total"].sum()
+```
+
+`as_index=False` keeps the grouping keys as ordinary columns, which is usually
+what you want before plotting or writing to CSV.
+
+<Callout kind="watch" title="mean of booleans">
+  ```python
+  df.groupby("region")["is_returned"].mean()   # a rate, not a mean
+  ```
+
+  Averaging a boolean column silently gives you a proportion. That is often
+  exactly what you want — but only if you meant it. Name the column so the
+  result reads clearly.
+</Callout>
+
+## transform keeps the shape
+
+```python
+sales["region_mean"] = sales.groupby("region")["total"].transform("mean")
+```
+
+`agg` reduces each group to a row. `transform` broadcasts the result back to
+every original row, which is what you need to compare each value against its
+group average or to subtract it.
+
+```python
+sales["deviation"] = sales["total"] - sales["region_mean"]
+```
+
+That is how you centre a column, normalise within groups, or flag outliers
+relative to their own category.
+
+<Callout kind="try" title="Three questions, three aggregations">
+  Take a sales table and compute: revenue per region, the order count per
+  region, and each order's share of its regional revenue. The first two use
+  `agg`; the third needs `transform`.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `groupby(...)["col"].agg(...)` is split, apply, combine in one expression. Use
+  named aggregations so the output is self-describing, `as_index=False` when you
+  want the keys as columns, and `transform` when the result must go back onto
+  every row.
+</Callout>

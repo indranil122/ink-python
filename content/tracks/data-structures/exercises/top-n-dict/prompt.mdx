@@ -1,0 +1,44 @@
+---
+title: "Top N Items"
+track: data-structures
+order: 12
+summary: "Return the n highest values in a dictionary, largest first."
+xp: 25
+difficulty: medium
+functionName: "top_n"
+sources:
+  - title: "Exercism Python Track — concept: dictionaries"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "The Python Tutorial — 5.1. Using Dictionaries"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The task
+
+Write `top_n(scores, n)` returning the n highest `(name, score)` pairs, highest
+score first.
+
+```python
+top_n({"ada": 100, "alan": 91, "grace": 98}, 2)
+# [("ada", 100), ("grace", 98)]
+```
+
+## Rules
+
+- Return a list of tuples, not a dictionary, because order carries information
+  here.
+- If `n` is larger than the number of items, return all of them.
+- `n` of zero returns an empty list.
+- Ties keep dictionary insertion order.
+
+## Two tools
+
+`heapq.nlargest(n, scores.items(), key=lambda pair: pair[1])` is the standard
+library answer and works on generators, so it handles data too large to sort.
+The readable answer is `sorted(...)[:n]`. Write both and note the difference.

@@ -1,0 +1,104 @@
+---
+title: "Project: Concurrent Fetching"
+track: concurrency
+order: 7
+summary: "Put threads, processes and asyncio side by side in one small project: fetch many pages, process them, and know which tool each stage needed."
+xp: 10
+tags: [concurrency, project]
+objectives:
+  - Build a bounded concurrent fetcher
+  - Process results with a pool
+  - Report timings that show where the time went
+sources:
+  - title: "The Python Tutorial — 9.8. Coroutines"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/asyncio.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The shape of the problem
+
+Download 200 pages, then extract a number from each. The first stage is
+overwhelmingly IO-bound. The second may be CPU-bound. Two stages, two tools.
+
+## Stage one: fetch
+
+```python
+import asyncio
+import aiohttp
+
+async def fetch(session, url):
+    async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+        response.raise_for_status()
+        return url, await response.text()
+
+
+async def fetch_all(urls, limit=10):
+    semaphore = asyncio.Semaphore(limit)
+
+    async with aiohttp.ClientSession() as session:
+        async def guarded(url):
+            async with semaphore:
+                return await fetch(session, url)
+
+        return await asyncio.gather(
+            *(guarded(url) for url in urls),
+            return_exceptions=True,
+        )
+```
+
+The semaphore is the important part. Firing 200 requests at once does not make
+it faster; it queues at the server, triggers rate limits, and uses 200
+connections you do not need. **Concurrency has a limit, and the limit is a
+design decision.**
+
+<Callout kind="watch" title="Reuse one client">
+  A new `ClientSession` per request means a new TCP connection and a new TLS
+  handshake each time. Create one session for the batch, as above. It is the
+  single most common performance mistake in async code.
+</Callout>
+
+## Stage two: process
+
+```python
+from concurrent.futures import ProcessPoolExecutor
+
+def extract_title(text):
+    match = re.search(r"<title>(.*?)</title>", text, re.S)
+    return match.group(1).strip() if match else None
+
+
+with ProcessPoolExecutor() as pool:
+    titles = list(pool.map(extract_title, bodies))
+```
+
+Now a CPU-bound stage runs in parallel across cores. If extraction turns out to
+be fast, the pool is overhead and a comprehension is better — measure.
+
+## Report the timings
+
+```python
+start = time.perf_counter()
+bodies = asyncio.run(fetch_all(urls))
+print(f"fetch: {time.perf_counter() - start:.2f}s")
+
+start = time.perf_counter()
+titles = process(bodies)
+print(f"process: {time.perf_counter() - start:.2f}s")
+```
+
+Always print timings. They turn "feels slow" into a number, and the number tells
+you which stage to change.
+
+<Callout kind="try" title="Find the knee">
+  Run the fetcher with the semaphore set to 1, 5, 10, 50 and 200. There will be a
+  point where more concurrency makes it slower. Find it, and write down what it
+  is on your connection.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Match the tool to the stage: async with a semaphore and one client session for
+  fetching, a process pool for genuinely CPU-heavy parsing, and timings printed
+  for both. Bound your concurrency deliberately, and reuse the HTTP client.
+</Callout>

@@ -1,0 +1,101 @@
+---
+title: "JSON"
+track: files
+order: 5
+summary: "Reading and writing JSON, the types that survive the round trip, and the ones that do not."
+xp: 10
+tags: [files, json]
+objectives:
+  - Serialise and deserialise with json
+  - Know which Python types JSON cannot represent
+  - Read and write JSON files safely
+sources:
+  - title: "The Python Tutorial — 7.2.2. Writing JSON Files"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/json.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The interchange format
+
+```python
+import json
+
+data = {"name": "Ada", "tags": ["python", "math"], "active": True}
+text = json.dumps(data, indent=2)
+
+restored = json.loads(text)
+print(restored["tags"][0])
+```
+
+`indent=2` is worth using for anything a human will read. `json.loads` returns
+plain dictionaries, lists, strings, numbers, booleans and `None`.
+
+## What survives the round trip
+
+| Python | JSON |
+| --- | --- |
+| `dict` | object |
+| `list`, `tuple` | array — and a tuple comes back a **list** |
+| `str` | string |
+| `int`, `float` | number |
+| `True`, `False` | `true`, `false` |
+| `None` | `null` |
+
+Sets, bytes, dates and custom objects do not survive. A tuple becomes a list, a
+float that is a whole number comes back as an int, and large integers beyond
+JavaScript's safe range can be lost by other readers.
+
+<Callout kind="watch" title="json.loads is not safe for untrusted input">
+  It can create arbitrary objects, which has been an attack vector. Accept
+  numbers, strings, booleans, lists and dictionaries only, or use a library that
+  validates as it parses.
+</Callout>
+
+## Files
+
+```python
+from pathlib import Path
+
+path = Path("config.json")
+path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+data = json.loads(path.read_text(encoding="utf-8"))
+```
+
+For large files, stream it rather than loading the whole document:
+
+```python
+with path.open(encoding="utf-8") as handle:
+    data = json.load(handle)
+```
+
+## Dates and Decimal
+
+```python
+json.dumps({"when": datetime(2026, 9, 24)}, default=str)
+```
+
+`default` is called for anything the encoder cannot handle. Converting dates to
+strings works, but you lose the type on the way back — so decide a format and
+parse it explicitly, or use ISO 8601 and `datetime.fromisoformat`.
+
+<Callout kind="try" title="Test the round trip">
+  Serialise a nested structure with a tuple, a set and a date, load it back, and
+  print the types. Then fix each difference: convert the tuple back with
+  `tuple(...)`, represent the set as a list, and parse the date with
+  `fromisoformat`. Deciding these rules early is cheaper than debugging them
+  later.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `json.dumps` and `json.loads` convert between JSON and Python built-ins.
+  Tuples become lists, sets and dates do not survive, and floats may come back
+  as ints. Read and write files with an explicit encoding, stream with
+  `json.load`, and convert unsupported types with `default`.
+</Callout>

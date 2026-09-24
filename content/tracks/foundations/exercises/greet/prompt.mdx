@@ -1,0 +1,40 @@
+---
+title: "Greet a Name"
+track: foundations
+order: 5
+summary: "Return a greeting string for a given name."
+xp: 25
+difficulty: easy
+functionName: "greet"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "The Python Tutorial — 3.1.2. Text"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The task
+
+Write a function `greet` that takes a name and returns the string
+`"Hello, <name>!"`, where `<name>` is replaced by the name you were given.
+
+```python
+greet("Ada")  # "Hello, Ada!"
+```
+
+## Rules
+
+- Return the greeting. Do not print it.
+- An empty name is still a valid name: `greet("")` returns `"Hello, !"`.
+- Names with spaces or unusual characters must be returned unchanged.
+
+## Before you run
+
+Say out loud what `greet("Grace")` should return. Then run the tests and
+compare.

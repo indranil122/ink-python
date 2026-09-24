@@ -1,0 +1,101 @@
+---
+title: "Archives"
+track: files
+order: 8
+summary: "zipfile and tarfile for compression, what compression actually does for you, and how to read an archive without extracting it into the working directory."
+xp: 10
+tags: [files, archives]
+objectives:
+  - Create and read a zip archive
+  - Choose zip or tar
+  - Guard against path traversal when extracting
+sources:
+  - title: "The Python Tutorial — 7.1.2. Creating ZIP Archives"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/zipfile.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "SciPy Lecture Notes — 3.2. Python and file I/O"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/file_io.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+---
+
+## Compression is automatic
+
+```python
+import zipfile
+
+with zipfile.ZipFile("backup.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+    archive.write("data.csv")
+    archive.writestr("notes/readme.txt", "generated automatically")
+```
+
+`ZIP_DEFLATED` is the setting that matters: without it the archive is stored
+uncompressed, and it is larger than the files inside it. A second argument
+controls the trade-off:
+
+```python
+zipfile.ZipFile("backup.zip", "w", compresslevel=9)
+```
+
+## Listing and reading
+
+```python
+with zipfile.ZipFile("backup.zip") as archive:
+    print(archive.namelist())
+
+    with archive.open("data.csv") as handle:
+        for line in handle:
+            print(line.decode("utf-8"))
+```
+
+`archive.read(name)` returns bytes; `archive.open(name)` gives you a stream you
+can iterate. Use `with` on both, and use `open` when the file is large.
+
+```python
+print(archive.testzip())
+```
+
+returns the name of the first corrupt member, or `None` when everything is fine.
+Worth running on an archive you are about to trust with a restore.
+
+<Callout kind="watch" title="Never extract an untrusted archive directly">
+  A member named `../../etc/passwd` writes outside the destination directory.
+  Check every name before extracting:
+
+  ```python
+  target = Path("out").resolve()
+  for member in archive.namelist():
+      if not (target / member).resolve().is_relative_to(target):
+          raise ValueError(f"unsafe path: {member}")
+  ```
+</Callout>
+
+## zip or tar?
+
+`zipfile` stores one compressed file per member and is randomly accessible.
+`tarfile` stores a stream with metadata, permissions and symlinks, and is what
+`.tar.gz` and `.tgz` are. Use zip for a bundle of files you will pull
+individually; use tar when you need Unix permissions or the archive is itself
+compressed on top.
+
+```python
+import tarfile
+
+with tarfile.open("backup.tar.gz", "w:gz") as archive:
+    archive.add("data", arcname="data")
+```
+
+<Callout kind="try" title="Measure the ratio">
+  Create a zip of a large text file at compresslevel 1 and 9, and compare the
+  sizes and the time. Then zip a PNG or an already-compressed archive and notice
+  that the ratio is close to 1 — there is nothing left to squeeze.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Use `zipfile` with `ZIP_DEFLATED` and a `compresslevel`, `archive.open` for
+  streaming, and `testzip` to verify. Use `tarfile` for Unix metadata. Always
+  validate member paths before extracting anything you did not create.
+</Callout>

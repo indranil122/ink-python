@@ -1,0 +1,133 @@
+---
+title: "Modules and Imports"
+track: functions
+order: 8
+summary: "Turning a file into a module, importing from it, and the import rules that decide whether a line runs once or every time."
+xp: 10
+tags: [modules]
+objectives:
+  - Create and import a module
+  - Understand import caching and the module guard
+  - Choose between import styles
+sources:
+  - title: "The Python Tutorial — 6. Modules"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/modules.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "The Python Tutorial — 6.1. Creating a Module"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/modules.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## A file is a module
+
+```python
+# geometry.py
+def area(radius):
+    return 3.14159 * radius ** 2
+```
+
+```python
+import geometry
+
+print(geometry.area(2))
+```
+
+The file name becomes the module name. `import` runs the file once, then caches
+it in `sys.modules`, so importing again is free.
+
+## Three styles
+
+```python
+import geometry
+geometry.area(2)
+
+from geometry import area
+area(2)
+
+from geometry import area as circle_area
+```
+
+`import geometry` is the clearest: every use says where the function came from.
+`from ... import ...` is shorter and easier to misread, because `area` could
+have come from anywhere. Large projects tend to prefer the first form and
+`import geometry as geo` at most.
+
+## The import guard
+
+```python
+def main():
+    print(geometry.area(2))
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Without the guard, importing `geometry` would run `main` as a side effect. The
+guard makes the difference between *being a library* and *being a script*
+explicit.
+
+<Callout kind="watch" title="Imports go at the top, but functions import inside">
+  Convention puts `import` at the top of the module, always. Putting an import
+  inside a function is also legal and occasionally right: it delays a slow or
+  optional dependency until the code path that needs it, and it keeps a
+  circular import from starting.
+</Callout>
+
+## Standard library, third party, local
+
+```python
+import json                 # standard library
+import requests             # third party, installed with pip
+import geometry             # your own project
+```
+
+Order them that way with a blank line between groups. The order tells the next
+reader where a dependency comes from, and whether the project will still run on a
+machine that installed nothing.
+
+```python
+import json
+
+import requests
+
+import geometry
+```
+
+## Packages and `__init__.py`
+
+A directory with `__init__.py` is a package:
+
+```text
+project/
+  __init__.py
+  geometry.py
+  io/
+    __init__.py
+    reader.py
+```
+
+```python
+from project.io import reader
+```
+
+That file exists so Python versions before 3.3 treated it as a regular module
+too. Modern Python still expects it in most tooling, and it is where package
+metadata can live.
+
+<Callout kind="try" title="Split and rejoin">
+  Create `texttools.py` with three functions you have written in this course.
+  Import it two ways from a second file, add the `__main__` guard, and confirm
+  that importing the second file does not execute its demo code.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Any `.py` file is a module, and `import` runs it once and caches it. Prefer
+  `import module` so the origin of each call is visible. Guard script entry with
+  `if __name__ == "__main__":`, group imports standard-library first, and use
+  `__init__.py` to make a directory a package.
+</Callout>

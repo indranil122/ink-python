@@ -1,0 +1,122 @@
+---
+title: "Writing Tests"
+track: debugging
+order: 6
+summary: "A test is a function that fails loudly. Write them in unittest or pytest, run one, run all, and read the failure message you will have to debug."
+xp: 10
+tags: [testing]
+objectives:
+  - Write a test in unittest and in pytest style
+  - Run a single test and the whole suite
+  - Structure tests so failures point at the cause
+sources:
+  - title: "The Python Tutorial — 7.2. Defining Functions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Google's Python Class — Debugging and Unit Testing"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/lesson_10b_unit_testing.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "Exercism Python Track — concept: testing"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## A test is a function with a name
+
+```python
+from mymodule import to_fahrenheit
+
+
+def test_zero_celsius():
+    assert to_fahrenheit(0) == 32
+
+
+def test_boiling_point():
+    assert to_fahrenheit(100) == 212
+```
+
+That is a test suite. `pytest` discovers functions named `test_*`, runs them, and
+reports which failed. The assertion that fires tells you the expected value, the
+actual value, and the line.
+
+## The same tests in unittest
+
+```python
+import unittest
+
+from mymodule import to_fahrenheit
+
+
+class TemperatureTests(unittest.TestCase):
+    def test_zero_celsius(self):
+        self.assertEqual(to_fahrenheit(0), 32)
+
+    def test_boiling_point(self):
+        self.assertAlmostEqual(to_fahrenheit(37), 98.6)
+```
+
+`unittest` is in the standard library, so it is always available and has no
+dependencies. `pytest` is nicer to write, gives better failure output, and is
+what most projects use. This site runs the `unittest` style directly, which is
+why its test harness understands both.
+
+<Callout kind="note" title="Floating point">
+  `assertEqual(0.1 + 0.2, 0.3)` fails, because binary floats are approximate.
+  Use `assertAlmostEqual`, or compare after rounding. This is not a Python
+  bug; it is arithmetic.
+</Callout>
+
+## Running them
+
+```bash
+pytest                      # everything
+pytest -k fahrenheit         # by name
+pytest tests/test_temp.py::test_zero_celsius   # one test
+python -m unittest discover -v
+```
+
+Running one test while iterating, and everything before you commit, is the
+habit that keeps suites fast enough to run often.
+
+## What to test
+
+- The normal case, once.
+- Each boundary: empty, zero, one, the largest valid value.
+- Each documented failure: wrong type, missing key, negative input.
+- A regression: the exact input that caused a bug before.
+
+<Callout kind="watch" title="Tests that cannot fail">
+  ```python
+  def test_everything():
+      assert calculate([1, 2, 3]) > 0
+  ```
+
+  A test that cannot fail will not fail, and it will still be there forever
+  giving false confidence. Every test should state one specific claim, and it
+  should be possible to break it deliberately.
+</Callout>
+
+## Tests as documentation
+
+The test suite is the most accurate description of what a function actually
+does, because it is kept in step with the code by definition. When the two
+disagree, the tests are usually right.
+
+<Callout kind="try" title="Prove the test works">
+  Write a test for `is_even`, then deliberately break the function to return
+  `True` always. Watch it fail with a clear message. That failure output is the
+  thing you will read at 2am, so make sure it tells you what happened.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  A test is a function named `test_*` that fails loudly. `pytest` and
+  `unittest` both run them; this site's harness runs both styles. Test the
+  normal case, the boundaries, the documented failures and the regression. Use
+  `assertAlmostEqual` for floats, and check that each test can actually fail.
+</Callout>

@@ -1,0 +1,144 @@
+---
+title: "Dictionaries"
+track: data-structures
+order: 3
+summary: "Key-value storage with O(1) lookup. Covers safe access, iteration order, get with defaults, and the difference between copying, updating and merging."
+xp: 10
+tags: [data-structures, dictionaries]
+objectives:
+  - Choose between indexing and get for missing keys
+  - Iterate a dictionary deliberately
+  - Merge dictionaries without surprises
+sources:
+  - title: "The Python Tutorial — 5.1. Using Dictionaries"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Google's Python Class — Strings, Lists, and Dictionaries"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/strings_lists_dictionaries.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## A dictionary maps keys to values
+
+```python
+scores = {"ada": 100, "alan": 91}
+
+scores["grace"] = 98
+print(scores["ada"])
+```
+
+Keys must be hashable: strings, numbers and tuples qualify, lists do not. Values
+can be anything, including other dictionaries and lists.
+
+## Accessing a key that may not exist
+
+This is the decision every dictionary user makes several times a day.
+
+```python
+scores = {"ada": 100}
+
+print(scores["ada"])
+print(scores.get("alan"))
+print(scores.get("alan", 0))
+```
+
+`scores["alan"]` raises `KeyError`. `scores.get("alan")` returns `None`.
+`scores.get("alan", 0)` returns a default you chose. The third is usually the
+one you want, because it makes the fallback explicit at the call site.
+
+<Callout kind="watch" title="A default of None hides a mistake">
+  `get` without a default turns a typo in a key into a silent `None` that
+  travels three functions away before it causes a confusing error. When the key
+  must exist, index the dictionary and let it raise.
+</Callout>
+
+## Membership before access
+
+```python
+if "alan" in scores:
+    print(scores["alan"])
+```
+
+The `in` operator on a dictionary checks keys, not values. This two-line form
+beats `scores.get("alan") is not None`, which is wrong for keys whose value is
+legitimately `None`.
+
+## Insertion order is guaranteed
+
+Python 3.7 and later preserve the order in which keys were added, and iterating
+a dictionary yields its keys.
+
+```python
+scores = {"ada": 100, "alan": 91}
+
+for name, score in scores.items():
+    print(name, score)
+
+for name in scores:
+    print(name)
+```
+
+Use `.items()` when you need both, `.keys()` when you need only names,
+`.values()` when you need only values. Sorting is explicit: `for name in
+sorted(scores)`.
+
+## Copying and merging
+
+```python
+original = {"a": 1}
+copy = original.copy()
+original["b"] = 2
+print(copy)   # {"a": 1}
+```
+
+A `.copy()` is shallow: the two dictionaries are separate, but any mutable
+values inside are still shared.
+
+```python
+left = {"a": 1, "b": 2}
+right = {"b": 3, "c": 4}
+
+merged = {**left, **right}
+print(merged)   # {"a": 1, "b": 3, "c": 4}
+```
+
+The right-hand side wins on conflict. `left.update(right)` does the same thing
+in place, which is the difference to watch for.
+
+<Callout kind="try" title="Counting, the canonical use">
+  ```python
+  counts = {}
+  for word in "a b a c b a".split():
+      counts[word] = counts.get(word, 0) + 1
+  print(counts)
+  ```
+
+  This is the pattern from the letter-frequency exercise. It is worth
+  recognising on sight: a dictionary, a loop, and `get` with a default.
+</Callout>
+
+## Removing and checking
+
+```python
+scores.pop("alan")        # remove and return, KeyError if missing
+scores.pop("alan", None)  # remove and return a default
+del scores["grace"]       # remove by key, KeyError if missing
+len(scores)               # how many keys
+```
+
+<Callout kind="recap" title="Recap">
+  Index a dictionary when the key must exist, use `get` with an explicit
+  default when it may not, and check with `in` before trusting a value.
+  Iteration order is insertion order, so `.items()`, `.keys()` and `.values()`
+  are all predictable. `.copy()` is shallow; `{**a, **b}` merges with the right
+  side winning.
+</Callout>

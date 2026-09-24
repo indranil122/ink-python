@@ -1,0 +1,115 @@
+---
+title: "Reading Tracebacks"
+track: debugging
+order: 4
+summary: "A repeatable method for turning a confusing failure into a specific question, and the five traceback shapes you will see most."
+xp: 10
+tags: [debugging]
+objectives:
+  - Follow a four-step method for any failure
+  - Read the traceback in the right order
+  - Recognise the common shapes quickly
+sources:
+  - title: "The Python Tutorial — 8.1. Raising Exceptions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/errors.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 20"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "Google's Python Class — Debugging and Unit Testing"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+---
+
+## The method
+
+1. **Reproduce.** Reliably, with the smallest input that still fails.
+2. **Read the bottom line.** The exception type and message.
+3. **Read the last frame.** That is where the failure happened.
+4. **Change one thing.** Add a print, check a type, test an assumption, run
+   again.
+
+Step four is what makes it an experiment rather than a guess.
+
+<Callout kind="note" title="Why smallest input">
+  A failure that happens once in a thousand requests is easier to reason about
+  when you can produce it on demand with three values. Most of the time spent
+  isolating a bug is spent building a reproducer, not fixing the code.
+</Callout>
+
+## The five shapes you will meet
+
+**Name it yourself** — the variable is spelled differently from the definition:
+
+```text
+NameError: name 'to_fahrenheit' is not defined
+```
+
+Usually a typo, or a line used before the assignment that creates it.
+
+**Wrong shape of value** — the right type, impossible content:
+
+```text
+ValueError: invalid literal for int() with base 10: '3.5'
+```
+
+The function wanted an int and received text that looks almost like one.
+
+**Wrong type entirely** — no method or operation applies:
+
+```text
+AttributeError: 'NoneType' object has no attribute 'strip'
+```
+
+The most common cause in real code: a function returned `None` because a branch
+did not return, and the caller assumed otherwise.
+
+**Missing collection entry:**
+
+```text
+KeyError: 'currency'
+IndexError: list index out of range
+```
+
+Usually a key that is sometimes missing, or an off-by-one on a boundary.
+
+**The file will not even parse:**
+
+```text
+IndentationError: unexpected indent
+SyntaxError: '(' was never closed
+```
+
+Nothing ran. Fix the indicated position first; the second error is often a
+consequence of the first.
+
+## Chained errors
+
+```text
+During handling of the above exception, another exception occurred:
+```
+
+means an `except` block raised something new. The first error is usually the
+real one, and the second is a failure while trying to recover. Fix the first and
+the second may disappear — or use `raise ... from error` to make the chain
+explicit.
+
+<Callout kind="try" title="Practise the method">
+  Write a function that fails on empty input. Break it three ways on purpose,
+  and for each one write down: the exception type, the line, and the single
+  question you would ask next. Then fix it once. This is the whole lesson.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Reproduce, read the bottom line, read the last frame, change one thing. The
+  common shapes are `NameError` for typos, `ValueError` for impossible values,
+  `AttributeError` for a `None` you did not expect, `KeyError` and `IndexError`
+  for missing entries, and `SyntaxError` for anything unparseable. In a chained
+  traceback, the first error is the cause.
+</Callout>

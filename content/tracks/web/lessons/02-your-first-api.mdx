@@ -1,0 +1,119 @@
+---
+title: "Your First API"
+track: web
+order: 2
+summary: "A working service in fifteen lines with FastAPI: a path operation, type hints, automatic validation and interactive documentation."
+xp: 10
+tags: [web, fastapi]
+objectives:
+  - Write and run a FastAPI application
+  - Return typed responses
+  - Use the automatic docs
+sources:
+  - title: "FastAPI Documentation"
+    author: "Sebastián Ramírez"
+    url: "https://fastapi.tiangolo.com/tutorial/"
+    license: "MIT"
+    licenseUrl: "https://github.com/fastapi/fastapi/blob/main/LICENSE"
+  - title: "The Python Tutorial — 7. Input and Output"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/inputoutput.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The smallest useful service
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI(title="Orders API")
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/orders/{order_id}")
+def get_order(order_id: int):
+    if order_id not in ORDERS:
+        raise HTTPException(status_code=404, detail="no such order")
+    return ORDERS[order_id]
+```
+
+```bash
+uvicorn app:app --reload
+```
+
+That is a working API. `uvicorn` runs it, `--reload` restarts on save, and
+`http://127.0.0.1:8000/docs` is interactive documentation generated from your
+code.
+
+## The type hint is the validation
+
+```python
+@app.post("/orders")
+def create_order(order: OrderCreate):
+    ...
+```
+
+```python
+class OrderCreate(BaseModel):
+    item: str
+    quantity: int = Field(ge=1, le=100)
+```
+
+Because `order_id: int` is a type hint, `/orders/abc` returns 422 automatically.
+Because `quantity` has bounds, a request for 5000 units is refused before your
+function runs. You write the rules once, and the docs show them.
+
+<Callout kind="note" title="Why FastAPI looks like this">
+  It reads the annotations at startup, builds a validation and serialisation
+  layer from them, and generates OpenAPI. The code you would have written by
+  hand to reject bad input is the code you already had to write to document the
+  endpoint.
+</Callout>
+
+## The response model
+
+```python
+class Order(BaseModel):
+    id: int
+    item: str
+    quantity: int
+
+@app.get("/orders/{order_id}", response_model=Order)
+def get_order(order_id: int):
+    ...
+```
+
+`response_model` filters the output to exactly those fields, which prevents an
+internal field from leaking into a public API. It is a security feature
+dressed as a typing feature.
+
+## Structure as you grow
+
+```text
+app/
+  main.py
+  routers/
+    orders.py
+    users.py
+  models.py
+  schemas.py
+```
+
+`APIRouter` splits a growing service into modules, each with its own prefix and
+tags, and `include_router` mounts them. Do this when the file passes about 200
+lines, not before.
+
+<Callout kind="try" title="Ship three endpoints">
+  Write `GET /health`, `GET /items` and `POST /items` with a request model, run
+  the server, and click through `/docs`. Add a bounds constraint to quantity,
+  then try to violate it from the interactive page and read the 422 response.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  A FastAPI app is a function with decorators. Type hints become validation and
+  documentation, `response_model` controls what leaves, and `APIRouter` keeps a
+  large service readable. Run it with `uvicorn app:app --reload`.
+</Callout>

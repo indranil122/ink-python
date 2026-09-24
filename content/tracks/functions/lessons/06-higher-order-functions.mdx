@@ -1,0 +1,120 @@
+---
+title: "Higher-Order Functions"
+track: functions
+order: 6
+summary: "Functions that take or return functions, and the three standard-library tools that replace most loops: map, filter and sorted."
+xp: 10
+tags: [functions]
+objectives:
+  - Use map, filter, sorted with a key function
+  - Write a higher-order function yourself
+  - Choose between a comprehension and a higher-order function
+sources:
+  - title: "SciPy Lecture Notes — 1.2. Python scientific computing"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/intro.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "The Python Tutorial — 4.2.5. List Comprehensions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/datastructures.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## A function that takes a function
+
+```python
+def apply_twice(function, value):
+    return function(function(value))
+```
+
+```python
+def repeat(text):
+    return text + text
+
+
+print(apply_twice(repeat, "ab"))
+```
+
+`str.upper`, `abs` and `len` are all functions you can pass. Nothing about them
+is special.
+
+## The three tools
+
+```python
+values = [1, 2, 3, 4, 5]
+
+doubled = list(map(lambda value: value * 2, values))
+evens = list(filter(lambda value: value % 2 == 0, values))
+ordered = sorted(values, key=lambda value: -value)
+```
+
+`map` transforms each item, `filter` keeps items that pass a test, and `sorted`
+takes a key that says which part to compare on.
+
+```python
+people = [
+    {"name": "ada", "age": 36},
+    {"name": "alan", "age": 41},
+]
+
+ordered = sorted(people, key=lambda person: person["age"])
+```
+
+That key function is the whole trick: it says *compare by age* without changing
+how the dictionaries work.
+
+<Callout kind="note" title="Generators, not lists">
+  In Python 3, `map` and `filter` return iterators, not lists. Wrap them in
+  `list(...)` to see values, or feed them to `sum`, `any` or a loop. The lazy
+  version is faster on large data and usually reads better.
+</Callout>
+
+## Writing your own
+
+```python
+def take_while(values, predicate):
+    result = []
+    for value in values:
+        if not predicate(value):
+            break
+        result.append(value)
+    return result
+
+
+take_while([1, 2, 3, 4], lambda value: value < 3)
+```
+
+`itertools` is full of these: `takewhile`, `dropwhile`, `chain`, `groupby`,
+`islice`. Read the documentation before writing another loop.
+
+## Comprehension or higher-order function?
+
+```python
+[x * 2 for x in values]
+```
+
+versus
+
+```python
+list(map(lambda x: x * 2, values))
+```
+
+The comprehension is faster and, for most people, easier to read. Prefer the
+higher-order form when the function already exists, when you are passing a
+named function you wrote, or when the standard library has a tool built for the
+job.
+
+<Callout kind="try" title="Compose two passes">
+  Take a list of dictionaries with `name` and `score`. Use `filter` to keep the
+  scores above 50, `map` to pull out the names, and `sorted` to order them
+  alphabetically. Then rewrite the whole thing as one comprehension and compare.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Higher-order functions take or return functions. `map` transforms, `filter`
+  selects, `sorted(key=...)` orders by a chosen field, and all three are lazy in
+  Python 3. Reach for the standard library version before writing a loop, and
+  prefer a comprehension when the transformation is simple.
+</Callout>

@@ -1,0 +1,109 @@
+---
+title: "Assertions"
+track: debugging
+order: 5
+summary: "assert states an invariant in one line. It is a debugging tool, a documentation tool, and a terrible way to validate input."
+xp: 10
+tags: [testing, debugging]
+objectives:
+  - Use assert to state an invariant
+  - Understand when assert is stripped out
+  - Know why user input must not be validated with assert
+sources:
+  - title: "The Python Tutorial — 7.5.1. Assertion Statements"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/reference/simple_stmts.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 3"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## One line that states a rule
+
+```python
+def to_fahrenheit(celsius):
+    assert isinstance(celsius, (int, float))
+    return celsius * 9 / 5 + 32
+```
+
+The message says what must be true. If it is not, the `AssertionError` points
+straight at the line that broke the contract.
+
+```python
+assert balance >= 0, f"balance went negative: {balance}"
+```
+
+The message is worth writing: it is the difference between a failure that tells
+you the value and one that makes you go looking.
+
+## The right and wrong places
+
+Use `assert` for things **you** control:
+
+```python
+def pop():
+    assert self.items, "pop from an empty stack"
+    return self.items.pop()
+```
+
+Do not use it for things the **user** controls:
+
+```python
+def withdraw(amount):
+    assert amount > 0        # wrong
+```
+
+<Callout kind="watch" title="Why user input must raise">
+  Assertions are removed when Python runs with the `-O` flag, which is common in
+  production containers and performance work. Every `assert` validating input
+  silently disappears, and the bad data flows straight through to the next
+  layer. Use `if not valid: raise ValueError(...)` for anything that comes from
+  outside the program.
+</Callout>
+
+| Situation | Use |
+| --- | --- |
+| Internal invariant | `assert` |
+| Type hint check inside a hot loop during development | `assert` |
+| User input, config file, network response | `raise` |
+| Contract between modules you control | `raise` if callers can break it |
+
+## Assertions as executable documentation
+
+```python
+def median(values):
+    assert values, "median of nothing is undefined"
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[middle]
+    return (ordered[middle - 1] + ordered[middle]) / 2
+```
+
+The first line states a precondition the rest of the function relies on. A
+reader learns the rule without reading the implementation.
+
+## The optimising flag
+
+```bash
+python -O script.py
+```
+
+sets `__debug__` to `False` and removes every `assert`. If you need behaviour
+that must survive optimisation, raise an exception.
+
+<Callout kind="try" title="Prove it">
+  Write a function with three `assert` statements. Run it normally, then with
+  `python -O`, and watch the checks disappear. Then replace the one that
+  validates an argument with a `raise` and confirm it still fires under `-O`.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `assert` documents and checks an invariant you control, and it disappears
+  under `python -O`. Use it for internal contracts, never for user input, and
+  always include a message that names the broken rule.
+</Callout>

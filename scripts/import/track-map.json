@@ -1,0 +1,58 @@
+{
+  "functions": [
+    "acronym",
+    "anagram",
+    "hamming",
+    "wordy",
+    "proverb",
+    "etl",
+    "change",
+    "knapsack",
+    "alphametics",
+    "gigasecond",
+    "collatz-conjecture",
+    "sum-of-multiples"
+  ],
+  "oop": [
+    "allergies",
+    "bowling",
+    "clock",
+    "luhn",
+    "matrix",
+    "minesweeper",
+    "pov",
+    "react",
+    "transpose",
+    "zipper"
+  ],
+  "debugging": ["connect", "tournament", "hangman", "diamond", "series"],
+  "files": ["ledger", "grep", "markdown", "say", "isogram"],
+  "stdlib": [
+    "gigasecond",
+    "etl",
+    "clock",
+    "strain",
+    "binary",
+    "hexadecimal",
+    "octal",
+    "trinary"
+  ],
+  "concurrency": [
+    "parallel-letter-frequency",
+    "kitchen-async",
+    "async-orders",
+    "strain",
+    "sublist"
+  ],
+  "data": [
+    "matrix",
+    "transpose",
+    "grains",
+    "triangle",
+    "poker",
+    "rectangles",
+    "acronym"
+  ],
+  "web": [],
+  "projects": []
+}

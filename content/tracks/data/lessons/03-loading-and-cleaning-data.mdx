@@ -1,0 +1,105 @@
+---
+title: "Loading and Cleaning Data"
+track: data
+order: 3
+summary: "Get data in, find out what is wrong with it, and fix it: dtypes, missing values, duplicates, outliers and dates."
+xp: 10
+tags: [data, pandas]
+objectives:
+  - Load CSV and Excel with explicit options
+  - Profile missing values and duplicates
+  - Fix dtypes and parse dates deliberately
+sources:
+  - title: "SciPy Lecture Notes — 3.2. Python and file I/O"
+    author: "Edited by Gaël Varoquaux et al."
+    url: "https://scipy-lectures.org/file_io.html"
+    license: "CC BY 4.0"
+    licenseUrl: "https://creativecommons.org/licenses/by/4.0/"
+  - title: "Pandas User Guide — Missing data"
+    author: "The pandas Development Team"
+    url: "https://pandas.pydata.org/docs/user_guide/missing_data.html"
+    license: "BSD-3-Clause"
+    licenseUrl: "https://pandas.pydata.org/"
+---
+
+## Read with intent
+
+```python
+df = pd.read_csv(
+    "sales.csv",
+    encoding="utf-8",
+    parse_dates=["order_date"],
+    dtype={"customer_id": "string"},
+)
+```
+
+`parse_dates` converts during load, which avoids the subtle string-to-datetime
+mistakes you get converting later. `dtype` stops an identifier column becoming a
+float because one row had a blank in it.
+
+```python
+df = pd.read_excel("report.xlsx", sheet_name="Q3", skiprows=2)
+chunks = pd.read_csv("big.csv", chunksize=100_000)
+```
+
+`chunksize` returns an iterator, so a file larger than memory can be processed
+in pieces.
+
+## Profile before cleaning
+
+```python
+print(df.shape)
+print(df.isna().sum())
+print(df.dtypes)
+print(df.duplicated().sum())
+print(df.describe(include="all"))
+```
+
+Five lines that tell you more than an hour of guessing. Cleaning a data set
+without profiling it is how you delete the interesting rows.
+
+<Callout kind="note" title="Three kinds of missing">
+  `None` and `NaN` mean "no value". `NaT` is the datetime version. `pd.NA` is an
+  explicit marker for extension dtypes. They behave similarly but not
+  identically, which matters as soon as you compare or fill.
+</Callout>
+
+## Handle it deliberately
+
+```python
+df = df.drop_duplicates()
+df = df.dropna(subset=["order_date", "total"])
+
+df["region"] = df["region"].fillna("Unknown")
+df["total"] = df["total"].fillna(df["total"].median())
+df["discount"] = df["discount"].fillna(0)
+```
+
+The fill value is a decision, and it should differ per column. Filling a missing
+price with the median is defensible; filling it with zero is usually a lie. If
+the distinction matters, keep a boolean `was_missing` column so the model can see
+it.
+
+## Dates and categoricals
+
+```python
+df["order_date"] = pd.to_datetime(df["order_date"], errors="coerce")
+df["region"] = df["region"].astype("category")
+```
+
+`errors="coerce"` turns unparseable values into `NaT` instead of raising, which
+is what you want while exploring and dangerous if you never count the
+conversions. A categorical column uses far less memory and speeds up grouping on
+a small set of values.
+
+<Callout kind="try" title="Write the cleaning report">
+  Load a messy CSV, then print the row count before and after each step, plus
+  how many values you dropped or filled. Anyone reviewing your analysis should
+  see that summary, and so should future you.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Load with `parse_dates` and explicit `dtype`. Profile shape, missing values,
+  duplicates and dtypes before cleaning. Fill with a decision per column, keep a
+  record of what you changed, and never coerce silently.
+</Callout>

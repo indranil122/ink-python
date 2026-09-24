@@ -1,0 +1,130 @@
+---
+title: "Lambdas and First-Class Functions"
+track: functions
+order: 5
+summary: "Functions are values. They can be stored, passed, returned and stored in lists, which is what makes Python code composable."
+xp: 10
+tags: [functions]
+objectives:
+  - Treat functions as ordinary values
+  - Use a lambda where a one-line function is clearer
+  - Know when a lambda should become a def
+sources:
+  - title: "The Python Tutorial — 4.2. Defining Functions"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 10"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## Functions are values
+
+```python
+def double(value):
+    return value * 2
+
+
+operation = double
+print(operation(21))
+```
+
+Assigning without parentheses binds the function itself. Nothing is called until
+the name is used with parentheses.
+
+```python
+operations = [double, str, len]
+print([operation(5) for operation in operations])
+```
+
+## lambda is a small anonymous function
+
+```python
+square = lambda value: value ** 2
+```
+
+The keyword exists mostly so a function can be passed inline:
+
+```python
+values.sort(key=lambda item: -item["score"])
+```
+
+`def` and `lambda` produce the same object. A `def` gets a name, can carry a
+docstring, and can span lines.
+
+<Callout kind="watch" title="When a lambda is the wrong tool">
+  ```python
+  data = [value.strip().lower() for value in lines if value.strip()]
+  ```
+
+  A lambda cannot contain a comprehension or a statement, so complex logic
+  pushed into one becomes unreadable fast. The moment it needs a comment, it
+  needs a name and a body: use `def`.
+</Callout>
+
+## Closures capture, they do not copy
+
+```python
+def make_counter():
+    count = 0
+
+    def increment():
+        nonlocal count
+        count += 1
+        return count
+
+    return increment
+
+
+first = make_counter()
+second = make_counter()
+
+print(first(), first())
+print(second())
+```
+
+`1`, `2`, `1`. Each call to `make_counter` creates a **new** `count`, and the
+returned function keeps it alive. That is a closure, and it is how Python builds
+objects without a class.
+
+`nonlocal` is the declaration that lets the inner function rebind the enclosing
+name. Without it, `count += 1` would create a local and raise `UnboundLocalError`.
+
+## Decorators are functions that wrap functions
+
+```python
+def timed(function):
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = function(*args, **kwargs)
+        print(f"{function.__name__} took {time.perf_counter() - start:.3f}s")
+        return result
+
+    return wrapper
+
+
+@timed
+def slow():
+    ...
+```
+
+The decorator receives a function and returns a replacement. `slow` is now
+`wrapper`, which calls the original. The pattern is worth recognising everywhere
+— it is how logging, caching, retries and access control are built.
+
+<Callout kind="try" title="Build a counter factory">
+  Write `make_stepper(step)` that returns a function which adds `step` to an
+  internal total each time it is called. Two steppers must not share state. Then
+  use it to write a closure-based accumulator.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Functions are values: assign them, pass them, return them. A lambda is the
+  inline form, and belongs in a `key=` or `map()` — use `def` for anything
+  longer. A closure remembers its enclosing scope, and `nonlocal` lets it
+  rebind those names. Decorators are the same idea applied to a function.
+</Callout>

@@ -1,0 +1,111 @@
+---
+title: "Code Quality Tooling"
+track: stdlib
+order: 8
+summary: "A formatter, a linter and a pre-commit hook turn style arguments into configuration, and catch whole classes of mistakes before review."
+xp: 10
+tags: [tooling, quality]
+objectives:
+  - Run a formatter and a linter
+  - Configure them in pyproject.toml
+  - Wire them into pre-commit and CI
+sources:
+  - title: "PyPA Packaging Tutorial — Editable installs"
+    author: "Python Packaging Authority"
+    url: "https://packaging.python.org/en/latest/"
+    license: "PSF-style permissive"
+    licenseUrl: "https://packaging.python.org/en/latest/"
+  - title: "The Python Tutorial — 7.2.1. Fancier Output Formatting"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/inputoutput.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The formatter decides
+
+```bash
+python -m ruff format .
+```
+
+A formatter rewrites your code to one agreed style. You stop arguing about
+indentation in review, and every diff becomes about logic. Pick one, configure
+it once, and never hand-format.
+
+## The linter finds code smells
+
+```bash
+python -m ruff check .
+```
+
+A linter reads code without running it and reports likely mistakes: unused
+imports, shadowed names, a mutable default argument, a bare `except`, an
+`== True` comparison. Many are bugs rather than style, which is why it belongs
+in CI.
+
+```toml
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+```
+
+`E` pycodestyle, `F` pyflakes, `I` import order, `B` bugbear, `UP` modernisation,
+`SIM` simplifications. Configuration lives in `pyproject.toml` with everything
+else.
+
+<Callout kind="note" title="Static checking as a separate step">
+  A type checker such as mypy or pyright reads annotations and the code
+  together and reports what the tests might not cover: a wrong argument type, an
+  attribute that may not exist, a return that does not match the annotation. It
+  is a different tool from the linter, and it finds different problems.
+</Callout>
+
+## Fail the build, not the review
+
+```bash
+python -m ruff format --check .
+python -m ruff check .
+python -m mypy src
+```
+
+Run exactly these three in CI on every pull request. A contributor who forgets
+to format gets a red check and a one-line fix, rather than a review comment
+about whitespace.
+
+## Pre-commit
+
+```yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.0
+    hooks:
+      - id: ruff-format
+      - id: ruff
+```
+
+```bash
+python -m pip install pre-commit
+pre-commit install
+```
+
+The hook runs on every commit. Problems are fixed before they reach anyone
+else, and a red commit is impossible to make by accident.
+
+<Callout kind="try" title="Measure the value">
+  Run a linter over an old project and sort the findings by rule. The
+  correctness rules — unused variables, shadowed built-ins, mutable defaults —
+  are almost always real defects. That is the argument for turning it on.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  A formatter settles style, a linter finds defects, a type checker checks
+  annotations, and pre-commit runs them before the code leaves your machine.
+  Configure all of it in `pyproject.toml` and enforce it in CI so no review is
+  ever about whitespace again.
+</Callout>

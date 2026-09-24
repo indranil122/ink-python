@@ -1,0 +1,96 @@
+---
+title: "Dates, Times and Timezones"
+track: stdlib
+order: 3
+summary: "datetime, timezone-aware arithmetic, and the bugs that come from mixing naive and aware values."
+xp: 10
+tags: [stdlib, time]
+objectives:
+  - Create dates and times
+  - Work correctly with timezones and UTC
+  - Format and parse with ISO 8601
+sources:
+  - title: "The Python Tutorial — 9. Dates and Times"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/datetime.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Python for Everybody — Chapter 16"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## The three types
+
+```python
+from datetime import date, datetime, time, timedelta
+
+today = date(2026, 9, 24)
+now = datetime(2026, 9, 24, 9, 30)
+delta = timedelta(days=1, hours=12)
+
+print(today + delta)
+```
+
+`date` is a day, `time` is a time of day, `datetime` is both. Arithmetic with a
+`timedelta` is the natural way to move around in time.
+
+## Naive versus aware
+
+```python
+from datetime import datetime, timezone
+
+naive = datetime(2026, 9, 24, 9, 30)
+aware = datetime(2026, 9, 24, 9, 30, tzinfo=timezone.utc)
+```
+
+A naive value has no timezone, so it does not say when it was. An aware one
+does, and is the only kind you can compare across machines. Mixing them raises
+`TypeError: can't subtract offset-naive and offset-aware datetimes`, which is
+Python protecting you from a silent, wrong answer.
+
+<Callout kind="watch" title="Store UTC, display local">
+  Keep timestamps in UTC, convert at the edges. A value like
+  `2026-09-24 09:30` in a database is ambiguous the moment you have users in two
+  countries. UTC plus `timezone.utc` is the storage format; local time is a
+  presentation decision.
+</Callout>
+
+## Timestamps
+
+```python
+timestamp = aware.timestamp()
+restored = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+```
+
+`fromtimestamp` without a timezone returns a naive local value, which is a
+frequent source of confusion. Pass the timezone you mean.
+
+## ISO 8601 for storage and APIs
+
+```python
+now.isoformat()
+datetime.fromisoformat("2026-09-24T09:30:00+00:00")
+```
+
+ISO strings sort lexicographically, which is exactly what you want for a column
+you filter by date, and every other language can read them. `strftime` exists
+for human formats:
+
+```python
+now.strftime("%d %B %Y")
+```
+
+<Callout kind="note" title="Durations are not datetimes">
+  "30 days" and "1 month" are different lengths. `timedelta` stores exact
+  durations, so adding a month requires calendar arithmetic — `dateutil.relativedelta`
+  in the third-party world, or a small helper if you only need a few cases.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `date`, `time`, `datetime` and `timedelta` cover almost everything. Be aware
+  of aware and naive values, store UTC, and use ISO 8601 for storage and APIs
+  because it sorts correctly and every language can read it.
+</Callout>

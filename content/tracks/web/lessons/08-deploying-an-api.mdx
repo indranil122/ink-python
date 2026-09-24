@@ -1,0 +1,97 @@
+---
+title: "Deploying an API"
+track: web
+order: 8
+summary: "From localhost to a real deployment: environment variables, a process manager, migrations, health checks and logs."
+xp: 10
+tags: [web, deployment]
+objectives:
+  - Configure an application entirely from the environment
+  - Run migrations as part of deployment
+  - Ship health checks and structured logs
+sources:
+  - title: "The Python Tutorial — 7. Input and Output"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/library/os.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/library/os.html"
+  - title: "PyPA Packaging Tutorial"
+    author: "Python Packaging Authority"
+    url: "https://packaging.python.org/en/latest/"
+    license: "PSF-style permissive"
+    licenseUrl: "https://packaging.python.org/en/latest/"
+---
+
+## Configuration is the environment
+
+```python
+import os
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    database_url: str
+    secret_key: str
+    debug: bool = False
+    model_config = {"env_file": ".env"}
+
+settings = Settings()
+```
+
+The application reads configuration once, at startup, and never hard-codes a
+host, a key or a flag. The same image then runs in development and production
+with different values and no code change.
+
+<Callout kind="watch" title="Secrets do not belong in git">
+  `.env` is for local development and is git-ignored. Real deployments get
+  secrets from the platform's environment settings, which are encrypted and
+  versioned separately from the code.
+</Callout>
+
+## The deployment checklist
+
+```bash
+python -m pip install -r requirements.txt
+python -m mypy src
+python -m ruff check .
+python -m pytest
+alembic upgrade head
+uvicorn app:app --host 0.0.0.0 --port $PORT
+```
+
+Run in that order. A migration that fails should stop the deployment before the
+new code serves traffic against the old schema.
+
+## Health checks
+
+```python
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/health/ready")
+def ready(db: DbSession):
+    db.execute(text("SELECT 1"))
+    return {"status": "ready"}
+```
+
+Liveness says the process is up; readiness says its dependencies work. Point
+your platform's health check at the right one, so a temporary database outage
+stops traffic instead of filling your logs with errors.
+
+## Logs and visibility
+
+Structured logs with a request id, shipped somewhere you can search, are what
+turn "it broke" into "this request broke". Log the method, path, status and
+duration for every request, and the traceback for every unhandled error.
+
+<Callout kind="try" title="Deploy one endpoint">
+  Put a health check, a config from the environment, and one database-backed
+  endpoint on a free host. Then break the environment variable, redeploy, and
+  watch the health check fail exactly as it should.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Read configuration from the environment, run checks then migrations then the
+  server, and never commit secrets. Separate liveness from readiness, and log
+  every request with an identifier you can follow through a failure.
+</Callout>

@@ -1,0 +1,40 @@
+---
+title: "Largest of Three"
+track: foundations
+order: 8
+summary: "Return the largest of three numbers without using max()."
+xp: 25
+difficulty: medium
+functionName: "largest"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Think Python, 2nd Edition — Chapter 7"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## The task
+
+Write `largest(a, b, c)` that returns the biggest of the three values.
+
+```python
+largest(3, 19, 7)  # 19
+```
+
+## Rules
+
+- Do not call `max()`. The point is to practise comparisons.
+- Ties are fine: return the value, not which argument it was.
+- Works with negative numbers and floats.
+
+## Think first
+
+If you sort a three-item list and take the last value, that is a fine solution —
+but the built-in-free version teaches the comparison chain from lesson 7. Write
+that one, then write the sort version, then compare them on readability.

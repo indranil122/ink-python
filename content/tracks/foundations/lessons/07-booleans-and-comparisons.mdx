@@ -1,0 +1,151 @@
+---
+title: "Booleans and Comparisons"
+track: foundations
+order: 7
+summary: "Conditions are built from booleans, and booleans are built from comparisons. Learn the comparison operators, the truthiness rules, and the comparison bugs that catch experienced programmers."
+xp: 10
+tags: [basics, booleans]
+objectives:
+  - Use all six comparison operators correctly
+  - Apply truthiness deliberately rather than accidentally
+  - Chain comparisons and use membership tests
+sources:
+  - title: "The Python Tutorial — 3.1.1. First Steps Towards Programming"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/introduction.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 4"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "Exercism Python Track — concept: conditionals"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## Two values, no more
+
+A boolean is either `True` or `False`. Booleans are what a condition *is*, and
+they come from comparisons.
+
+```python
+print(3 > 2)
+print(3 == 2)
+print(3 != 2)
+```
+
+Those print `True`, `False`, `True`. The most common mistake in all of
+programming is visible right here: `=` assigns, `==` compares. Mixing them up
+produces a statement that runs and does the wrong thing.
+
+## The six comparisons
+
+| Operator | Meaning |
+| --- | --- |
+| `>` | greater than |
+| `<` | less than |
+| `>=` | greater than or equal |
+| `<=` | less than or equal |
+| `==` | equal |
+| `!=` | not equal |
+
+`==` compares **values**, not identity. Two different objects with equal
+contents are `==`. There is an `is` operator too, and it asks a completely
+different question: *are these the same object?* For beginners, the rule is
+simple: use `==`, and leave `is` for `None`.
+
+```python
+first = [1, 2]
+second = [1, 2]
+
+print(first == second)
+print(first is second)
+```
+
+Equal contents, different objects.
+
+## Truthiness: what counts as False
+
+You will meet `if something:` rather than `if something == True:` constantly.
+That works because Python defines which values count as false.
+
+False values: `False`, `None`, `0`, `0.0`, empty string `""`, empty collections
+`[]`, `{}`, `set()`, and the singleton `0j`.
+
+Everything else is true, including the string `"False"` and the number `-1`.
+
+```python
+print(bool(""))
+print(bool("False"))
+print(bool([0]))
+print(bool(0))
+```
+
+<Callout kind="watch" title="The empty-collection rule">
+  An empty list is falsy, which is exactly what you want when asking "is this
+  basket empty?" Be careful only when a function returns either a value or
+  `None`, and `if result:` quietly discards a legitimate `0` or `""`.
+</Callout>
+
+## Chaining and membership
+
+Python lets you write a range as one expression, which reads better than two
+`and`s.
+
+```python
+score = 85
+
+print(70 <= score <= 100)
+print(score in [80, 85, 90])
+print("py" in "python")
+print("z" not in "python")
+```
+
+`70 <= score <= 100` means `70 <= score and score <= 100`, with one comparison
+instead of two.
+
+## Combining conditions
+
+```python
+age = 21
+has_ticket = True
+
+if age >= 18 and has_ticket:
+    print("Welcome in")
+```
+
+Use `and` when both must hold, `or` when either suffices, and `not` to negate.
+Parentheses matter when mixing them, because `not` binds tighter than `and`,
+which binds tighter than `or`.
+
+```python
+print(not True and False)
+print(not (True and False))
+```
+
+The first is `False`, the second is `True`. Write the parentheses anyway; the
+reader is not a compiler.
+
+<Callout kind="try" title="Three traps, on purpose">
+  ```python
+  print(1 == 1.0)
+  print(True == 1)
+  print(0 == "")
+  ```
+
+  All three print `True`. Python compares a `bool` as the integer `1` or `0`,
+  and an `int` or `float` as `0` against an empty string only in the sense that
+  both are falsy and `0 == ""` is... run it and see whether the comment in this
+  paragraph was right. If it prints `False`, trust the code, not the prose.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `==` compares, `=` assigns. Six comparison operators produce booleans, and
+  `is` asks about object identity rather than value. Most values are truthy;
+  empty strings, empty collections, zero and `None` are falsy. Chain comparisons
+  with `a <= x <= b`, and test membership with `in`.
+</Callout>

@@ -1,0 +1,50 @@
+---
+title: "Letter Frequency"
+track: foundations
+order: 11
+summary: "Count how often each letter appears in a string and return a dictionary."
+xp: 25
+difficulty: medium
+functionName: "letter_counts"
+sources:
+  - title: "Google's Python Class — Strings, Lists, and Dictionaries"
+    author: "Nick Parlante, Google engEDU"
+    url: "https://github.com/google/python-class/blob/master/lessons/strings_lists_dictionaries.md"
+    license: "CC BY 2.5"
+    licenseUrl: "https://creativecommons.org/licenses/by/2.5/"
+  - title: "Exercism Python Track — concept: dictionaries"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## The task
+
+Write `letter_counts(text)` returning a dictionary mapping each letter to the
+number of times it appears.
+
+```python
+letter_counts("banana")  # {"b": 1, "a": 3, "n": 2}
+```
+
+## Rules
+
+- Lowercase the text first, so case does not create separate entries.
+- Ignore anything that is not a letter: spaces, digits, punctuation.
+- An empty string returns an empty dictionary.
+- Include letters that appear once. Omit letters that do not appear.
+
+## The accumulator pattern
+
+This is the first exercise that builds a dictionary step by step, and the shape
+appears everywhere in real code:
+
+```python
+counts = {}
+for character in text:
+    counts[character] = counts.get(character, 0) + 1
+```
+
+`dict.get(key, default)` is the safe way to read a key that might be missing.
+Plain `counts[key]` would raise `KeyError` on the first character.

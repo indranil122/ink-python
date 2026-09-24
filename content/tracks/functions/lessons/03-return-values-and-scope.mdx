@@ -1,0 +1,130 @@
+---
+title: "Return Values and Scope"
+track: functions
+order: 3
+summary: "Where names live, what a function can see, and why returning a tuple is often better than returning a list."
+xp: 10
+tags: [functions, scope]
+objectives:
+  - Distinguish local, enclosing and global scope
+  - Avoid global state
+  - Return several values as a tuple
+sources:
+  - title: "Think Python, 2nd Edition — Chapter 6"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+  - title: "The Python Tutorial — 10.1. Naming and Binding"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/reference/executionmodel.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## Names created inside a function are local
+
+```python
+def calculate():
+    total = 42
+    return total
+
+
+print(total)
+```
+
+raises `NameError`. `total` exists only while `calculate` runs. The reverse also
+holds: a function can read a name defined outside it.
+
+```python
+tax_rate = 0.2
+
+
+def with_tax(amount):
+    return amount * (1 + tax_rate)
+```
+
+## LEGB, in one line
+
+Names resolve through **Local**, **Enclosing**, **Global**, then **Built-in**.
+That order is why an inner function can read an outer function's variables, and
+why a local assignment shadows rather than changes the global.
+
+```python
+count = 10
+
+
+def outer():
+    count = 20
+
+    def inner():
+        return count
+
+    return inner()
+
+
+print(count)   # 10
+```
+
+The inner function sees the enclosing `count` of `20`. The module-level `10` is
+untouched.
+
+<Callout kind="watch" title="global is almost never the answer">
+  ```python
+  total = 0
+
+
+  def add(value):
+      global total
+      total += value
+  ```
+
+  This works, and it makes every reader wonder who else touches `total`, when,
+  and in what order. Pass the accumulator in and return the new value instead.
+  Global state is the usual cause of bugs that appear only under load.
+</Callout>
+
+## Returning several values
+
+Python has no multiple return. It returns one value, and that value can be a
+tuple.
+
+```python
+def bounds(values):
+    return min(values), max(values)
+
+
+low, high = bounds([3, 1, 4])
+```
+
+This is the standard idiom, and unpacking at the call site is part of the API:
+
+```python
+low, high = bounds([3, 1, 4])     # clear
+low, high = bounds([3, 1, 4])[0]  # worse
+low = bounds([3, 1, 4])[0]        # poor
+```
+
+Returning a list instead works and loses the meaning: nothing says how many
+items to expect or what they are. If the count can vary, a dictionary with named
+keys is clearer still.
+
+<Callout kind="try" title="Find the boundary">
+  ```python
+  def process(values):
+      doubled = [value * 2 for value in values]
+      count = len(doubled)
+      return count
+  ```
+
+  `doubled` disappears when the function returns. Decide whether the caller
+  needs it, and if so, return it. Values that fall out of scope are the quietest
+  kind of wasted work.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Names assigned inside a function are local and vanish with it. Names resolve
+  Local, Enclosing, Global, Built-in. Avoid `global`; pass state in and return
+  new state out. Return a tuple when the answer has a fixed small shape, and
+  unpack it at the call site.
+</Callout>

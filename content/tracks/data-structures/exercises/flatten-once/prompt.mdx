@@ -1,0 +1,43 @@
+---
+title: "Flatten Once"
+track: data-structures
+order: 4
+summary: "Flatten a list of lists by exactly one level, leaving deeper nesting alone."
+xp: 25
+difficulty: medium
+functionName: "flatten_once"
+sources:
+  - title: "Exercism Python Track — concept: lists"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "Think Python, 2nd Edition — Chapter 10"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## The task
+
+Write `flatten_once(items)` that joins a list of lists into a single list, one
+level deep.
+
+```python
+flatten_once([[1, 2], [3], [4, 5]])  # [1, 2, 3, 4, 5]
+```
+
+## Rules
+
+- Exactly one level. `flatten_once([[1, [2]]])` returns `[1, [2]]`.
+- Non-list items at the top level are kept: `flatten_once([1, [2]])` returns
+  `[1, 2]`.
+- The original is not modified.
+
+## Two levels of thinking
+
+The classic solution is a list comprehension with a conditional expression:
+include a nested list's items when the item is a list, otherwise include the
+item itself. Write that, then write the explicit loop version with `isinstance`
+and compare the two. Both belong in your vocabulary.

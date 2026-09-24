@@ -1,0 +1,116 @@
+---
+title: "Debugging and Logging"
+track: debugging
+order: 8
+summary: "Logging is what you wish you had enabled an hour ago. Covers levels, handlers, formatting, and what never to log."
+xp: 10
+tags: [debugging, logging]
+objectives:
+  - Configure logging with levels and format
+  - Log exceptions with the stack trace
+  - Avoid logging secrets and user data
+sources:
+  - title: "The Python Tutorial — 7.7. Logging Debug Output to other Files"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/howto/logging.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "The Python Tutorial — 10.1. Naming and Binding"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/reference/executionmodel.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## print is not logging
+
+`print` goes to stdout, has no levels, no timestamps and no way to be turned off.
+The `logging` module has all of that and costs one import.
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+logger.info("loaded %d records", len(records))
+```
+
+Note the `%d` with a separate argument rather than an f-string. The message is
+only formatted if the level is enabled, which avoids the cost of building
+strings that will be thrown away.
+
+## The four levels
+
+| Level | Use for |
+| --- | --- |
+| `DEBUG` | Detail useful while developing |
+| `INFO` | Normal events: started, finished, count |
+| `WARNING` | Something unexpected that was handled |
+| `ERROR` | The operation failed |
+| `CRITICAL` | The program cannot continue |
+
+Set the level once at startup. Everything below it is skipped, which is how you
+keep a production log readable.
+
+<Callout kind="note" title="Get a logger per module">
+  `logging.getLogger(__name__)` gives every module its own logger, so you can
+  turn one part of the system up to `DEBUG` and leave the rest alone. Never use
+  `logging.info(...)` at module level: it configures the root logger as a side
+  effect of importing your file.
+</Callout>
+
+## Format
+
+```python
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-8s %(name)s: %(message)s",
+)
+```
+
+That produces lines like `2026-09-24 09:15:02 INFO     billing: invoice sent`.
+The name tells you which module, the timestamp orders the events, and the level
+is right there in the text.
+
+## Log the exception, not a string
+
+```python
+try:
+    charge(order)
+except PaymentError:
+    logger.exception("charge failed for order %s", order.id)
+    raise
+```
+
+`logger.exception` attaches the traceback automatically, at `ERROR` level. Using
+`logger.error("%s", error)` instead gives you a message and no stack, which is
+usually the information you need.
+
+<Callout kind="watch" title="Never log these">
+  Passwords, tokens, API keys, session cookies, full card numbers, personal
+  data you were not asked to store. Log the last four digits if you must
+  correlate. Also avoid logging every request body: the log becomes
+  unreadable, expensive, and a second copy of data you did not mean to keep.
+</Callout>
+
+## Logging and the browser runtime
+
+The exercises in this course run in a Pyodide worker, where file handlers do not
+exist. The `logging` module itself does, and a handler that writes to the
+console output the site already captures is a good fit for teaching. In a
+service, the same calls go to a file or a log aggregator with no code change.
+
+<Callout kind="try" title="Instrument a function">
+  Add logging to a function that processes a list: one `INFO` at the start with
+  the count, one `DEBUG` per item, one `INFO` at the end with the total. Run it
+  at `WARNING` and note that none of it appears. That is the level doing its
+  job.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Use `logging`, not `print`: per-module loggers, levels that can be turned off,
+  and deferred `%` formatting. Configure the format once at startup. Use
+  `logger.exception` to capture the traceback, and never log secrets or personal
+  data.
+</Callout>

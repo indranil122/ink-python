@@ -1,0 +1,145 @@
+---
+title: "Dataclasses"
+track: oop
+order: 7
+summary: "A decorator writes the class for you: __init__, __repr__ and __eq__ from a list of fields, with defaults, frozen instances and ordering when you need them."
+xp: 10
+tags: [oop, dataclasses]
+objectives:
+  - Replace an __init__ with a dataclass
+  - Use field defaults, default_factory, frozen and order
+  - Know when a plain class is still the better choice
+sources:
+  - title: "The Python Tutorial — 9.7. Data Classes"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/classes.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Exercism Python Track — concept: classes and dataclasses"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+---
+
+## The class you write every time
+
+```python
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __repr__(self):
+        return f"Point(x={self.x}, y={self.y})"
+
+    def __eq__(self, other):
+        if not isinstance(other, Point):
+            return NotImplemented
+        return (self.x, self.y) == (other.x, other.y)
+```
+
+Twenty lines that say nothing about `Point`. A dataclass says the same thing in
+three:
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass
+class Point:
+    x: float
+    y: float
+```
+
+The decorator generates `__init__`, `__repr__` and `__eq__` from the annotated
+fields. The fields are now part of the class definition, which is where readers
+look.
+
+## Defaults and factories
+
+```python
+@dataclass
+class Session:
+    user_id: str
+    tags: list[str] = field(default_factory=list)
+    retries: int = 3
+```
+
+`field(default_factory=list)` is essential and easy to get wrong. `tags: list[str]
+= []` is a mutable default, the exact bug from lesson 2 of Track 3: every
+instance would share one list.
+
+<Callout kind="watch" title="Ordering rules">
+  Fields with defaults must come after fields without, exactly like function
+  parameters. A field with no default after one with a default is a
+  `TypeError` at class creation.
+</Callout>
+
+## Frozen and ordered
+
+```python
+@dataclass(frozen=True, order=True)
+class Version:
+    major: int
+    minor: int
+```
+
+`frozen=True` raises `FrozenInstanceError` on assignment, and makes instances
+hashable — correct for a value that must not change, like a coordinate or a
+version. `order=True` gives `<`, `>` and `sorted()` for free.
+
+```python
+Version(1, 2) < Version(1, 10)   # True, numeric not lexical
+```
+
+## Nesting and conversion
+
+```python
+@dataclass
+class Window:
+    top_left: Point
+    size: Point
+    title: str = ""
+```
+
+`Window(top_left=Point(0, 0), size=Point(80, 24))` is readable, and
+`dataclasses.asdict(window)` turns it into plain dictionaries for JSON.
+
+<Callout kind="note" title="When not to use one">
+  A dataclass is a bag of values with generated behaviour. If your class needs
+  custom `__init__` logic, several private attributes, or behaviour that does
+  not fit a field list — inheritance, composition and properties are clearer.
+</Callout>
+
+## Methods still go in the class
+
+```python
+@dataclass
+class Rectangle:
+    width: float
+    height: float
+
+    @property
+    def area(self):
+        return self.width * self.height
+
+    def scaled(self, factor):
+        return Rectangle(self.width * factor, self.height * factor)
+```
+
+A dataclass does not replace methods, only the boilerplate. This is the class
+you would write by hand if you were being careful.
+
+<Callout kind="try" title="Compare the two">
+  Write `Rectangle` the long way with a full `__init__`, `__repr__` and `__eq__`.
+  Then rewrite it as a dataclass with an `area` property. Keep the long version
+  in a comment and decide which one you would rather review in a pull request.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  `@dataclass` generates `__init__`, `__repr__` and `__eq__` from annotated
+  fields. Use `field(default_factory=list)` rather than a mutable default. `frozen=True`
+  makes instances immutable and hashable, `order=True` adds comparison, and
+  methods and properties still belong in the class.
+</Callout>

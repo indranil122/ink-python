@@ -1,0 +1,73 @@
+---
+title: "Memoised Fibonacci"
+track: functions
+order: 13
+summary: "Fibonacci with a cache: the first exercise where naive recursion is too slow and the fix is a decorator."
+xp: 25
+difficulty: medium
+functionName: "fibonacci"
+sources:
+  - title: "Exercism Python Track — concept: functions"
+    author: "Exercism"
+    url: "https://github.com/exercism/python"
+    license: "MIT"
+    licenseUrl: "https://opensource.org/license/mit"
+  - title: "The Python Tutorial — 4.1. More Flow Control Tools"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/controlflow.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+---
+
+## The task
+
+Write `fibonacci(n)` returning the nth Fibonacci number, where `fibonacci(0)` is
+`0` and `fibonacci(1)` is `1`.
+
+```python
+fibonacci(10)   # 55
+```
+
+## Rules
+
+- `n` is a non-negative integer.
+- Naive recursion recomputes the same values over and over, so
+  `fibonacci(35)` takes seconds. Your version must return `fibonacci(80)`
+  quickly.
+
+## Why the naive version is slow
+
+The call tree for `fibonacci(30)` contains 2.7 million calls, because
+`fibonacci(28)` is computed thousands of times. The answer is to remember
+results.
+
+## Two fixes
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fibonacci(n):
+    if n < 2:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+```
+
+Or a plain dictionary, which teaches the same idea without a decorator:
+
+```python
+def fibonacci(n, cache=None):
+    if cache is None:
+        cache = {}
+    if n < 2:
+        return n
+    if n not in cache:
+        cache[n] = fibonacci(n - 1, cache) + fibonacci(n - 2, cache)
+    return cache[n]
+```
+
+<Callout kind="try" title="Measure both">
+  Time your uncached version at n = 25 and n = 30, then the cached one at
+  n = 80. Write the two numbers down. That ratio is the entire lesson about why
+  caching exists.
+</Callout>

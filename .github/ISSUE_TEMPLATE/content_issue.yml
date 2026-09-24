@@ -1,0 +1,55 @@
+name: Content issue
+description: Report a factual error, unclear lesson, broken citation or licence problem.
+title: "[Content]: "
+labels: ["content"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Content changes are gated by citations and licence compatibility. Please include a source where possible.
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      placeholder: https://ink-python.vercel.app/learn/foundations/...
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Issue type
+      options:
+        - Factual error
+        - Unclear explanation
+        - Broken or missing citation
+        - Licence or attribution problem
+        - Exercise or test problem
+        - Typo or formatting
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong?
+      description: Quote the problematic text or explain the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested correction
+      description: Proposed wording, test change or source.
+  - type: input
+    id: source
+    attributes:
+      label: Supporting source URL
+      placeholder: https://docs.python.org/3/...
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing content issues first.
+          required: true
+        - label: I have the right to share any suggested text under this project's licences.
+          required: true

@@ -1,0 +1,93 @@
+---
+title: "Encodings"
+track: files
+order: 2
+summary: "Bytes are not characters. How UTF-8 works, why the default encoding varies by platform, and the UnicodeDecodeError you will meet."
+xp: 10
+tags: [files, text]
+objectives:
+  - Explain the difference between bytes and text
+  - Read and write with an explicit encoding
+  - Recover from a decoding error
+sources:
+  - title: "The Python Tutorial — 5.2. Unicode HOWTO"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/howto/unicode.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Think Python, 2nd Edition — Chapter 11"
+    author: "Allen B. Downey"
+    url: "https://greenteapress.com/wp/thinkpython/thinkpython.html"
+    license: "CC BY-NC 3.0"
+    licenseUrl: "https://creativecommons.org/licenses/by-nc/3.0/"
+---
+
+## Text is a convention on top of bytes
+
+A file stores bytes. `b"caf\xc3\xa9"` and `b"caf\xe9"` are the same word written
+twice: once in UTF-8, once in Latin-1. Only the encoding tells you which.
+
+```python
+with open("notes.txt", "rb") as handle:
+    raw = handle.read()
+
+type(raw)   # bytes
+```
+
+Open without `b` and Python decodes for you — using the platform default, which
+is why the same script can work on your machine and fail on a server.
+
+<Callout kind="watch" title="Always say encoding">
+  ```python
+  open("notes.txt", encoding="utf-8")
+  ```
+
+  Passing `encoding` explicitly is the single most useful habit in file handling.
+  It costs three characters and removes a whole class of "works on my machine"
+  bugs. UTF-8 is the right answer for essentially all new data.
+</Callout>
+
+## ASCII, Latin-1, UTF-8
+
+| Encoding | Covers | Notes |
+| --- | --- | --- |
+| ASCII | 128 characters | The original; no accents |
+| Latin-1 | First 256 bytes | One byte per character, never fails |
+| UTF-8 | All of Unicode | One to four bytes per character |
+
+UTF-8 is the default choice for storage and interchange. Latin-1 appears when
+you must read legacy European data and need to lose nothing.
+
+## When decoding fails
+
+```text
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 12
+```
+
+The file is not UTF-8. Try another encoding, or be explicit about what to do:
+
+```python
+with open("legacy.txt", encoding="cp1252", errors="replace") as handle:
+    text = handle.read()
+```
+
+`errors="replace"` substitutes a marker, `errors="ignore"` drops the bytes, and
+both lose information. For data you care about, detect the encoding properly
+rather than guessing.
+
+## When to work in bytes
+
+Images, audio, PDFs, archives — anything that is not text. Read them with `rb`
+and `wb`, and never pass those bytes to anything expecting `str`.
+
+<Callout kind="try" title="Feel the difference">
+  Write `"café"` to a file in UTF-8, read it back as Latin-1, then read it as
+  UTF-8. The first gives you mojibake and no error; the second gives you the
+  original. That gap is the entire lesson.
+</Callout>
+
+<Callout kind="recap" title="Recap">
+  Files store bytes; text is an interpretation. Always pass `encoding="utf-8"`
+  explicitly. Use `errors` only when you accept data loss, and keep binary data
+  in binary mode.
+</Callout>

@@ -1,0 +1,90 @@
+---
+title: "Reading and Writing Text"
+track: files
+order: 1
+summary: "open, read, write, and close. The default mode, the three ways to read, and why context managers are not optional here."
+xp: 10
+tags: [files]
+objectives:
+  - Open a file for reading and writing
+  - Choose between read, readline and iteration
+  - Always close, preferably with with
+sources:
+  - title: "The Python Tutorial — 7. Input and Output"
+    author: "Python Software Foundation"
+    url: "https://docs.python.org/3/tutorial/inputoutput.html"
+    license: "PSF License"
+    licenseUrl: "https://docs.python.org/3/license.html"
+  - title: "Python for Everybody — Chapter 9"
+    author: "Charles Severance"
+    url: "https://www.py4e.com/book"
+    license: "CC BY-NC-SA"
+    licenseUrl: "https://www.py4e.com/materials"
+---
+
+## open is the whole interface
+
+```python
+handle = open("notes.txt", "r")
+print(handle.read())
+handle.close()
+```
+
+Modes: `r` read, `w` write (truncating), `a` append, `x` create and fail if it
+exists, `b` binary, `+` read and write. `w` destroying an existing file is the
+one that bites people, so check before you open.
+
+## Three ways to read
+
+```python
+with open("notes.txt", encoding="utf-8") as handle:
+    everything = handle.read()
+
+with open("notes.txt", encoding="utf-8") as handle:
+    first = handle.readline()
+
+with open("notes.txt", encoding="utf-8") as handle:
+    for line in handle:
+        print(line.strip())
+```
+
+`read()` loads the whole file, which is fine for small files and wrong for
+large ones. Iterating the handle streams it a line at a time and is the habit
+worth forming.
+
+## Writing
+
+```python
+with open("report.txt", "w", encoding="utf-8") as handle:
+    handle.write("first line\n")
+    handle.writelines(["a\n", "b\n"])
+```
+
+There is no `write` for numbers: convert with `str` or use an f-string, and
+remember the `\n`. Missing newlines are the reason a file written line by line
+comes out as one very long line.
+
+<Callout kind="watch" title="Check before you truncate">
+  ```python
+  from pathlib import Path
+
+  path = Path("report.txt")
+  if path.exists():
+      raise FileExistsError(path)
+  ```
+
+  `open(path, "w")` on an existing file empties it without warning. If the file
+  matters, check first or write to a temporary file and move it into place.
+</Callout>
+
+## The newline trap
+
+Windows text files use `\r\n`, Unix files `\n`. `open(..., newline="")` disables
+translation so you see exactly what is on disk, and `writelines` will not add
+anything for you. Get it wrong and you get doubled blank lines.
+
+<Callout kind="recap" title="Recap">
+  `open` takes a mode and returns a handle; `r` reads, `w` truncates, `a`
+  appends. Use `with` so the file always closes, iterate for large files, and
+  remember that `write` needs a string and an explicit newline.
+</Callout>
