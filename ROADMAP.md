@@ -209,20 +209,20 @@ license with attribution; respect non-commercial terms in full; never monetise.
 
 ## 6. Delivery phases
 
-| Phase | Scope                                                                     | Status          |
-| ----- | ------------------------------------------------------------------------- | --------------- |
-| 0     | Scaffold, quality gates, CI                                               | **Done**        |
-| 1     | Monochrome design system, shell, landing                                  | **Done**        |
-| 2     | MDX pipeline, Zod validation, Track 1 lessons                             | **Done**        |
-| 3     | Pyodide worker, console, editor, tests                                    | **Done**        |
-| 4     | Drizzle schema + migration, gamification, local progress                  | **Done**        |
-| 5     | Server-side verification libs, rate limiting (route off in static export) | **Ready**       |
-| 6     | Levels, streak, badges, XP chip, profile, activity grid                   | **Done**        |
-| 7     | Ink-path curriculum map                                                   | **Done**        |
-| 8     | Content: all eleven tracks have lessons                                   | **Done**        |
-| 9     | Accessibility, SEO, sitemap, health check, error boundaries               | **Done**        |
-| 10a   | Deploy static site to Vercel, connect GitHub auto-deploy                  | **In progress** |
-| 10b   | Connect Neon, enable accounts, server-verified XP                         | **Planned**     |
+| Phase | Scope                                                                     | Status      |
+| ----- | ------------------------------------------------------------------------- | ----------- |
+| 0     | Scaffold, quality gates, CI                                               | **Done**    |
+| 1     | Monochrome design system, shell, landing                                  | **Done**    |
+| 2     | MDX pipeline, Zod validation, Track 1 lessons                             | **Done**    |
+| 3     | Pyodide worker, console, editor, tests                                    | **Done**    |
+| 4     | Drizzle schema + migration, gamification, local progress                  | **Done**    |
+| 5     | Server-side verification libs, rate limiting (route off in static export) | **Ready**   |
+| 6     | Levels, streak, badges, XP chip, profile, activity grid                   | **Done**    |
+| 7     | Ink-path curriculum map                                                   | **Done**    |
+| 8     | Content: all eleven tracks have lessons                                   | **Done**    |
+| 9     | Accessibility, SEO, sitemap, health check, error boundaries               | **Done**    |
+| 10a   | Deploy static site to Vercel, connect GitHub auto-deploy                  | **Done**    |
+| 10b   | Connect Neon, enable accounts, server-verified XP                         | **Planned** |
 
 Published today: **11 tracks, 92 lessons, 76 exercises, 28,345 words, 195 static pages.**
 

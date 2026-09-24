@@ -4,6 +4,14 @@ import { absoluteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-static";
 
+function pageUrl(pathname: string): string {
+  if (pathname === "") {
+    return absoluteUrl("/");
+  }
+
+  return absoluteUrl(`${pathname}/`);
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const lessons = getAllLessons();
   const exercises = getAllExercises();
@@ -21,17 +29,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ...staticRoutes.map((route) => ({
-      url: absoluteUrl(route),
+      url: pageUrl(route),
       changeFrequency: "weekly" as const,
       priority: route === "" ? 1 : 0.7,
     })),
     ...lessons.map((lesson) => ({
-      url: absoluteUrl(`/learn/${lesson.track}/${lesson.slug}`),
+      url: pageUrl(`/learn/${lesson.track}/${lesson.slug}`),
       changeFrequency: "monthly" as const,
       priority: 0.8,
     })),
     ...exercises.map((exercise) => ({
-      url: absoluteUrl(`/learn/${exercise.track}/exercises/${exercise.slug}`),
+      url: pageUrl(`/learn/${exercise.track}/exercises/${exercise.slug}`),
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),
