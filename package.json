@@ -33,7 +33,7 @@
     "start": "node scripts/preview.mjs",
     "preview": "node scripts/preview.mjs",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "typegen": "next typegen",
     "content:validate": "tsx scripts/content/validate.ts",
     "content:index": "tsx scripts/content/index.ts",
