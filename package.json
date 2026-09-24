@@ -27,6 +27,11 @@
   "engines": {
     "node": ">=20.9.0"
   },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.28.1"
+    }
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
